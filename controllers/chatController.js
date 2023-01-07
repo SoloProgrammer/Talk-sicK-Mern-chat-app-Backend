@@ -1,8 +1,7 @@
 const Chat = require('../models/chatModel')
 const Message = require('../models/messageModel')
 const User = require('../models/userModel')
-const errorRespose = require('../config/errorStatus')
-const BadRespose = require('../config/errorStatus')
+const { errorRespose, BadRespose } = require('../config/errorStatus')
 
 const accesschat = async (req, res) => {
     const { userId } = req.body;
@@ -31,7 +30,7 @@ const accesschat = async (req, res) => {
             }
             try {
                 let createdChat = await Chat.create(newChat);
-                res.status(201).json({ status, message: "Chat has been created sucessfully", createdChat })
+                res.status(201).json({ status, message: "Chat has been created Successfully", createdChat })
             } catch (error) {
                 return errorRespose(res, false, error)
             }
@@ -146,14 +145,14 @@ const addTogroup = async (req, res) => {
 const removeFromgroup = async (req, res) => {
     const { chatId, userId } = req.body
     let status = false
-    if(!chatId || !userId) return BadRespose(res,status,"userId or chatId not send with the request body")
+    if (!chatId || !userId) return BadRespose(res, status, "userId or chatId not send with the request body")
 
     try {
-        let updatedChat = await Chat.findByIdAndUpdate(chatId,{$pull:{users:userId}},{new:true});
+        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId } }, { new: true });
 
-        return res.status(204).json({status:true,message:"User remove from the group sucessfully",updatedChat})
+        return res.status(204).json({ status: true, message: "User remove from the group sucessfully", updatedChat })
     } catch (error) {
-        return errorRespose(res,status,error)
+        return errorRespose(res, status, error)
     }
 }
 
