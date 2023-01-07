@@ -1,12 +1,12 @@
 const Chat = require('../models/chatModel')
 const Message = require('../models/messageModel')
 const User = require('../models/userModel')
-const errorRespose = require('../config/errorStatus')
-const BadRespose = require('../config/errorStatus')
+const { errorRespose, BadRespose } = require('../config/errorStatus');
+
 
 const accesschat = async (req, res) => {
     const { userId } = req.body;
-    if (!userId) return errorRespose(res, false, { message: "UserId param not send with the request" })
+    if (!userId) return BadRespose(res, false, "UserId param not send with the request")
 
     try {
         let isChat = await Chat.find({
@@ -52,13 +52,15 @@ const fetchallchats = async (req, res) => {
             })
             .populate('users', '-password')
             .populate('latestMessage')
-            .populate('groupAdmin')
+            .populate('groupAdmin', '-password')
             .sort({ createdAt: -1 })
 
         chats = await User.populate(chats, {
             path: "latestMessage.sender",
             select: "name avatar email phone"
         })
+
+        if(!chats) return BadRespose(res,status,"Some Error occured please try again later")
 
         res.status(200).json({ status: true, chats })
     } catch (error) {
@@ -85,7 +87,7 @@ const creategroup = async (req, res) => {
         let Fullgroup = await Chat.find({ _id: newGroup.id })
             .populate('users', '-password')
             .populate('latestMessage')
-            .populate('groupAdmin')
+            .populate('groupAdmin', '-password')
 
         Fullgroup = await User.populate(Fullgroup, {
             path: 'latestMessage.sender',
@@ -103,7 +105,7 @@ const creategroup = async (req, res) => {
 const renamegroup = async (req, res) => {
     const { chatId, groupname } = req.body
     let status = false
-    if (!chatId) return res.status(400).json({ status, message: "ChatId params is not send with the request body" })
+    if (!chatId || chatId == "") return res.status(400).json({ status, message: "ChatId params is not send with the request body" })
     if (!groupname) return res.status(400).json({ status, message: "Please provide the Groupname to update" })
 
     let chatWithUpdatedGroupname = await Chat.findByIdAndUpdate(chatId, { chatName: groupname }, { new: true })
@@ -111,7 +113,7 @@ const renamegroup = async (req, res) => {
     // let Fullgroup = await Chat.find({ _id: chatWithUpdatedGroupname.id })
     //     .populate('users', '-password')
     //     .populate('latestMessage')
-    //     .populate('groupAdmin')
+    //     .populate('groupAdmin','-password')
 
     // Fullgroup = await User.populate(Fullgroup, {
     //     path: 'latestMessage.sender',
@@ -134,7 +136,7 @@ const addTogroup = async (req, res) => {
     try {
         let updatedChat = await Chat.findByIdAndUpdate(chatId, { $addToSet: { users: [...users] } }, { new: true })
 
-        if (!updatedChat) errorRespose(res, false, { message: "Failed to add users into group" })
+        if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
         return res.status(200).json({ status: true, message: "User added to Group", updatedChat })
 
@@ -146,15 +148,18 @@ const addTogroup = async (req, res) => {
 const removeFromgroup = async (req, res) => {
     const { chatId, userId } = req.body
     let status = false
-    if(!chatId || !userId) return BadRespose(res,status,"userId or chatId not send with the request body")
+
+    if (!chatId || !userId) return BadRespose(res, status, "userId or chatId not send with the request body")
 
     try {
-        let updatedChat = await Chat.findByIdAndUpdate(chatId,{$pull:{users:userId}},{new:true});
+        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId } }, { new: true });
 
-        return res.status(204).json({status:true,message:"User remove from the group sucessfully",updatedChat})
+        if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
+
+        return res.status(200).json({ status: true, message: "User remove from the group sucessfully", updatedChat })
     } catch (error) {
-        return errorRespose(res,status,error)
+        return errorRespose(res, status, error)
     }
 }
 
-module.exports = { accesschat, fetchallchats, creategroup, renamegroup, addTogroup, removeFromgroup }
+module.exports = { accesschat, fetchallchats, creategroup, renamegroup, addTogroup, removeFromgroup } 

@@ -4,4 +4,5 @@ const errorRespose = (res, status, error) => {
 const BadRespose = (res, status, msg) => {
     return res.status(400).json({ status, message: msg })
 }
+
 module.exports = { errorRespose, BadRespose }

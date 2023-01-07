@@ -1,20 +1,21 @@
 const genToken = require('../config/generateToken');
 const User = require('../models/userModel')
-const errorRespose = require('../config/errorStatus');
+const { errorRespose, BadRespose } = require('../config/errorStatus');
 
 
 const createUser = async (req, res) => {
     let status = true
     try {
-        const { avatar, name, email, password, phone } = req.body;
+        const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ status, message: "All feilds are required!" })
+            return BadRespose(res, status, "All feilds are required!")
         }
 
         let user = await User.find({ email })
 
-        if (user.length > 0) return res.status(400).json({ status: false, message: "User with this email already exists" })
+        if (user.length > 0) return BadRespose(res, false, "User with this email already exists")
+
         let newUser = await new User({ ...req.body }).save();
 
         let token = genToken(newUser.id)
@@ -31,7 +32,7 @@ const authUser = async (req, res) => {
     let status = false
 
     if (!email || !password) {
-        return res.json({ status, message: "All fields are required!" })
+        return BadRespose(res, status, "All fields are required!")
     }
 
     try {
@@ -47,7 +48,7 @@ const authUser = async (req, res) => {
         }
 
     } catch (error) {
-        errorRespose(res, status, error)
+        return errorRespose(res, status, error)
     }
 }
 
@@ -67,7 +68,7 @@ const searchuser = async (req, res) => {
     let status = false
     let query = req.query.search
 
-    if (!query) return res.status(400).json({ status, message: "Query params is not send with the request" })
+    if (!query) return BadRespose(res, status, "Query params is not send with the request")
 
     try {
         const keyword = {
