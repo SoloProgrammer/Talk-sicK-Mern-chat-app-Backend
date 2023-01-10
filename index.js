@@ -1,5 +1,7 @@
 const express = require('express')
 
+var cors = require('cors')
+
 const connetToMongo = require('./config/db.js')
 
 const userRoutes = require('./routes/userRoutes')
@@ -11,6 +13,7 @@ connetToMongo()
 const port = process.env.PORT || 8001
 
 const app = express()
+app.use(cors())
 
 app.use(express.json())
 
