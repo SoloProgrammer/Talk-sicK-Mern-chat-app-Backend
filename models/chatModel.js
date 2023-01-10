@@ -18,6 +18,7 @@ const chatSchema = new Schema({
     },
     groupAvatar: {
         type: String,
+        default:"https://cdn-icons-png.flaticon.com/512/4596/4596328.png"
     },
     latestMessage: {
         type: String,

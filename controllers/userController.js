@@ -80,7 +80,7 @@ const searchuser = async (req, res) => {
 
         const searchResults = await User.find(keyword).find({ _id: { $ne: req.user.id } }).select('-password');
 
-        res.status(200).json({ status, searchResults })
+        res.status(200).json({ status:true, searchResults })
 
     } catch (error) {
         errorRespose(res, status, error)

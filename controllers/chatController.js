@@ -1,12 +1,8 @@
 const Chat = require('../models/chatModel')
 const Message = require('../models/messageModel')
 const User = require('../models/userModel')
-<<<<<<< HEAD
 const { errorRespose, BadRespose } = require('../config/errorStatus');
 
-=======
-const { errorRespose, BadRespose } = require('../config/errorStatus')
->>>>>>> a36fb3cc93c817b60ed5f444fe475b43779d41ce
 
 const accesschat = async (req, res) => {
     const { userId } = req.body;
@@ -64,7 +60,7 @@ const fetchallchats = async (req, res) => {
             select: "name avatar email phone"
         })
 
-        if(!chats) return BadRespose(res,status,"Some Error occured please try again later")
+        if (!chats) return BadRespose(res, status, "Some Error occured please try again later")
 
         res.status(200).json({ status: true, chats })
     } catch (error) {
@@ -73,17 +69,20 @@ const fetchallchats = async (req, res) => {
 }
 const creategroup = async (req, res) => {
 
-    const { groupname, users } = req.body;
+    const { groupName, users, groupAvatar } = req.body;
     let status = false;
 
-    if (users.length < 2) return BadRespose(res, status, "More than 2 people are required to form a group")
+    if (users.length < 2) return BadRespose(res, status, "More than 2 people's are required to form a group")
 
-    groupdata = {
-        chatName: groupname,
+    let groupdata = {
+        chatName: groupName,
         users: [...users, req.user.id],
         isGroupchat: true,
         groupAdmin: req.user.id
     }
+
+    if(groupAvatar) groupdata.groupAvatar = groupAvatar
+    
 
     try {
         let newGroup = await Chat.create(groupdata)
@@ -152,22 +151,14 @@ const addTogroup = async (req, res) => {
 const removeFromgroup = async (req, res) => {
     const { chatId, userId } = req.body
     let status = false
-<<<<<<< HEAD
-
-=======
->>>>>>> a36fb3cc93c817b60ed5f444fe475b43779d41ce
     if (!chatId || !userId) return BadRespose(res, status, "userId or chatId not send with the request body")
 
     try {
         let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId } }, { new: true });
 
-<<<<<<< HEAD
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
         return res.status(200).json({ status: true, message: "User remove from the group sucessfully", updatedChat })
-=======
-        return res.status(204).json({ status: true, message: "User remove from the group sucessfully", updatedChat })
->>>>>>> a36fb3cc93c817b60ed5f444fe475b43779d41ce
     } catch (error) {
         return errorRespose(res, status, error)
     }

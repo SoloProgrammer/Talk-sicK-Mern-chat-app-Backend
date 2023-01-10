@@ -27,6 +27,10 @@ const userSchama = new Schema({
     phone: {
         type: Number,
         default: 0
+    },
+    about:{
+        type:String,
+        default:"Hey my Talk-o-Meter is on now"
     }
 }, { timestamps: true });
 
