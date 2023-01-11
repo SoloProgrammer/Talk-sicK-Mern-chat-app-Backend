@@ -81,8 +81,8 @@ const creategroup = async (req, res) => {
         groupAdmin: [req.user.id]
     }
 
-    if(groupAvatar) groupdata.groupAvatar = groupAvatar
-    
+    if (groupAvatar) groupdata.groupAvatar = groupAvatar
+
 
     try {
         let newGroup = await Chat.create(groupdata)
@@ -103,6 +103,32 @@ const creategroup = async (req, res) => {
         return res.status(201).json({ status: true, message: "New Group created sucessfully", Fullgroup: Fullgroup[0] })
     } catch (error) {
         return errorRespose(res, status, error)
+    }
+}
+const addGroupAdmin = async (req, res) => {
+    try {
+        let { userId, chatId } = req.body;
+        if (!userId || !chatId) return BadRespose(res, false, "userId or chatId may not send with the request body!")
+
+        let updated = await Chat.findByIdAndUpdate(chatId, { $addToSet: { groupAdmin: userId } })
+        if (!updated) return BadRespose(res, false, "Some error occured try again later!")
+
+        return res.status(200).json({ status: true, message: "User updated as a GroupAdmin!" })
+    } catch (error) {
+        return errorRespose(res, false, error)
+    }
+}
+const removeGroupAdmin = async (req, res) => {
+    try {
+        let { userId, chatId } = req.body;
+        if (!userId || !chatId) return BadRespose(res, false, "userId or chatId may not send with the request body!")
+
+        let updated = await Chat.findByIdAndUpdate(chatId, { $pull: { groupAdmin: userId } })
+        if (!updated) return BadRespose(res, false, "Some error occured try again later!")
+
+        return res.status(200).json({ status: true, message: "User has removed from GroupAdmin!" })
+    } catch (error) {
+        return errorRespose(res, false, error)
     }
 }
 const renamegroup = async (req, res) => {
@@ -164,4 +190,4 @@ const removeFromgroup = async (req, res) => {
     }
 }
 
-module.exports = { accesschat, fetchallchats, creategroup, renamegroup, addTogroup, removeFromgroup } 
+module.exports = { accesschat, fetchallchats, creategroup, renamegroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 
