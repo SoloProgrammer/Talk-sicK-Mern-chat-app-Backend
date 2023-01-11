@@ -24,11 +24,10 @@ const chatSchema = new Schema({
         type: String,
         ref: "messages"
     },
-    groupAdmin: {
+    groupAdmin: [{
         type: Schema.Types.ObjectId,
-        trim: true,
         ref: "users"
-    },
+    }],
 }, { timestamps: true })
 
 module.exports = mongoose.model('chats', chatSchema)
