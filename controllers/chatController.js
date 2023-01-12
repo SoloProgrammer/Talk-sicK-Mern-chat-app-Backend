@@ -76,7 +76,7 @@ const creategroup = async (req, res) => {
 
     let groupdata = {
         chatName: groupName,
-        users: [...users, req.user.id],
+        users: [req.user.id, ...users],
         isGroupchat: true,
         groupAdmin: [req.user.id]
     }
@@ -111,9 +111,17 @@ const addGroupAdmin = async (req, res) => {
         if (!userId || !chatId) return BadRespose(res, false, "userId or chatId may not send with the request body!")
 
         let updated = await Chat.findByIdAndUpdate(chatId, { $addToSet: { groupAdmin: userId } })
+
         if (!updated) return BadRespose(res, false, "Some error occured try again later!")
 
-        return res.status(200).json({ status: true, message: "User updated as a GroupAdmin!" })
+        let chat = await Chat.find({ _id: chatId })
+            .populate('users', '-password')
+            .populate('groupAdmin', '-password')
+            .populate('latestMessage');
+
+        if(chat.length < 1) return BadRespose(res,false,"Some error occured try again!")
+
+        return res.status(200).json({ status: true, message: "User updated as a GroupAdmin!", chat:chat[0] })
     } catch (error) {
         return errorRespose(res, false, error)
     }
