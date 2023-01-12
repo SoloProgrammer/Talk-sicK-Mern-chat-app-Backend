@@ -134,7 +134,15 @@ const removeGroupAdmin = async (req, res) => {
         let updated = await Chat.findByIdAndUpdate(chatId, { $pull: { groupAdmin: userId } })
         if (!updated) return BadRespose(res, false, "Some error occured try again later!")
 
-        return res.status(200).json({ status: true, message: "User has removed from GroupAdmin!" })
+        let chat = await Chat.find({ _id: chatId })
+            .populate('users', '-password')
+            .populate('groupAdmin', '-password')
+            .populate('latestMessage');
+
+        if(chat.length < 1) return BadRespose(res,false,"Some error occured try again!")
+
+        return res.status(200).json({ status: true, message: "User has removed from GroupAdmin!", chat:chat[0] })
+
     } catch (error) {
         return errorRespose(res, false, error)
     }
