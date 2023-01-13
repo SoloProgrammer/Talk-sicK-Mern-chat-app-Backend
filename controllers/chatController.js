@@ -192,9 +192,16 @@ const addTogroup = async (req, res) => {
 
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
+        let chat = await Chat.find({ _id: chatId })
+            .populate('users', '-password')
+            .populate('groupAdmin', '-password')
+            .populate('latestMessage');
+
+        if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
+
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: "User added to Group", updatedChat, chats })
+        return res.status(200).json({ status: true, message: "User added to Group", chat:chat[0], chats })
 
     } catch (error) {
         return errorRespose(res, status, error)
