@@ -4,7 +4,7 @@ const User = require('../models/userModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
 
 
-const fetchallchatsCommon = async (req) =>{
+const fetchallchatsCommon = async (req) => {
     let chats = await Chat.find(
         {
             users: { $elemMatch: { $eq: req.user.id } }
@@ -64,7 +64,7 @@ const accesschat = async (req, res) => {
 const fetchallchats = async (req, res) => {
     let status = false
     try {
-        
+
         let chats = await fetchallchatsCommon(req)
 
         res.status(200).json({ status: true, chats })
@@ -114,7 +114,7 @@ const addGroupAdmin = async (req, res) => {
     try {
         let { userId, chatId } = req.body;
         if (!userId || !chatId) return BadRespose(res, false, "userId or chatId may not send with the request body!")
-        
+
         let updated = await Chat.findByIdAndUpdate(chatId, { $addToSet: { groupAdmin: userId } })
 
         if (!updated) return BadRespose(res, false, "Some error occured try again later!")
@@ -124,11 +124,11 @@ const addGroupAdmin = async (req, res) => {
             .populate('groupAdmin', '-password')
             .populate('latestMessage');
 
-        if(chat.length < 1) return BadRespose(res,false,"Some error occured try again!")
+        if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
 
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: "User updated as a GroupAdmin!", chat:chat[0], chats })
+        return res.status(200).json({ status: true, message: "User updated as a GroupAdmin!", chat: chat[0], chats })
     } catch (error) {
         return errorRespose(res, false, error)
     }
@@ -146,11 +146,11 @@ const removeGroupAdmin = async (req, res) => {
             .populate('groupAdmin', '-password')
             .populate('latestMessage');
 
-        if(chat.length < 1) return BadRespose(res,false,"Some error occured try again!")
+        if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
 
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: "User has removed from GroupAdmin!", chat:chat[0],chats })
+        return res.status(200).json({ status: true, message: "User has removed from GroupAdmin!", chat: chat[0], chats })
 
     } catch (error) {
         return errorRespose(res, false, error)
@@ -192,7 +192,9 @@ const addTogroup = async (req, res) => {
 
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
-        return res.status(200).json({ status: true, message: "User added to Group", updatedChat })
+        let chats = await fetchallchatsCommon(req)
+
+        return res.status(200).json({ status: true, message: "User added to Group", updatedChat, chats })
 
     } catch (error) {
         return errorRespose(res, status, error)
