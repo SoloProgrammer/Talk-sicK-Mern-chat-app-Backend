@@ -209,7 +209,7 @@ const removeFromgroup = async (req, res) => {
     if (!chatId || !userId) return BadRespose(res, status, "userId or chatId not send with the request body")
 
     try {
-        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId } }, { new: true });
+        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId, groupAdmin: userId } }, { new: true });
 
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
