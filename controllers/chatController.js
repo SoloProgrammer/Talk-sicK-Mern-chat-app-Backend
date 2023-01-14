@@ -193,7 +193,7 @@ const addTogroup = async (req, res) => {
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
         let chat = await Getfullchat(chatId)
-        
+
         let chats = await fetchallchatsCommon(req)
 
         return res.status(200).json({ status: true, message: users.length > 1 ? "New members added to Group" : "New member added to Group", chat: chat[0], chats })
@@ -213,7 +213,11 @@ const removeFromgroup = async (req, res) => {
 
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
-        return res.status(200).json({ status: true, message: "User remove from the group sucessfully", updatedChat })
+        let chat = await Getfullchat(chatId)
+
+        let chats = await fetchallchatsCommon(req)
+
+        return res.status(200).json({ status: true, message: "User remove from the group sucessfully", chat: chat[0], chats })
     } catch (error) {
         return errorRespose(res, status, error)
     }
