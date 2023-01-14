@@ -21,6 +21,17 @@ const fetchallchatsCommon = async (req) => {
     if (!chats) return BadRespose(res, false, "Some Error occured please try again later")
     return chats
 }
+
+const Getfullchat = async (chatId) => {
+    let chat = await Chat.find({ _id: chatId })
+        .populate('users', '-password')
+        .populate('groupAdmin', '-password')
+        .populate('latestMessage');
+
+    if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
+
+    return chat;
+}
 const accesschat = async (req, res) => {
     const { userId } = req.body;
     if (!userId) return BadRespose(res, false, "UserId param not send with the request")
@@ -118,12 +129,7 @@ const addGroupAdmin = async (req, res) => {
 
         if (!updated) return BadRespose(res, false, "Some error occured try again later!")
 
-        let chat = await Chat.find({ _id: chatId })
-            .populate('users', '-password')
-            .populate('groupAdmin', '-password')
-            .populate('latestMessage');
-
-        if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
+        let chat = await Getfullchat(chatId)
 
         let chats = await fetchallchatsCommon(req)
 
@@ -140,12 +146,7 @@ const removeGroupAdmin = async (req, res) => {
         let updated = await Chat.findByIdAndUpdate(chatId, { $pull: { groupAdmin: userId } })
         if (!updated) return BadRespose(res, false, "Some error occured try again later!")
 
-        let chat = await Chat.find({ _id: chatId })
-            .populate('users', '-password')
-            .populate('groupAdmin', '-password')
-            .populate('latestMessage');
-
-        if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
+        let chat = await Getfullchat(chatId)
 
         let chats = await fetchallchatsCommon(req)
 
@@ -191,16 +192,11 @@ const addTogroup = async (req, res) => {
 
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
-        let chat = await Chat.find({ _id: chatId })
-            .populate('users', '-password')
-            .populate('groupAdmin', '-password')
-            .populate('latestMessage');
-
-        if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
-
+        let chat = await Getfullchat(chatId)
+        
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: users.length > 1 ? "New members added to Group" : "New member added to Group", chat:chat[0], chats })
+        return res.status(200).json({ status: true, message: users.length > 1 ? "New members added to Group" : "New member added to Group", chat: chat[0], chats })
 
     } catch (error) {
         return errorRespose(res, status, error)
