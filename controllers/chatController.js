@@ -43,7 +43,7 @@ const accesschat = async (req, res) => {
                 { users: { $elemMatch: { $eq: req.user.id } } },
                 { users: { $elemMatch: { $eq: userId } } }
             ]
-        }).populate('users', '-password').populate('latestMessage')
+        }).select('-groupAvatar -groupAdmin').populate('users', '-password').populate('latestMessage')
 
         isChat = await User.populate(isChat, {
             path: 'latestMessage.sender',
@@ -59,7 +59,18 @@ const accesschat = async (req, res) => {
             }
             try {
                 let createdChat = await Chat.create(newChat);
-                res.status(201).json({ status, message: "Chat has been created Successfully", createdChat })
+
+                fullchat = await Chat.findById(createdChat._id)
+                    .select('-groupAvatar -groupAdmin')
+                    .populate('users', "-password")
+                    .populate("latestMessage")
+
+                fullchat = await User.populate(fullchat, {
+                    path: 'latestMessage.sender',
+                    select: 'name email avatar phone'
+                })
+
+                res.status(201).json({ status, message: "Chat has been created Successfully", fullchat })
             } catch (error) {
                 return errorRespose(res, false, error)
             }
