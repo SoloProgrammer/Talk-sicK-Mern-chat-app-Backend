@@ -6,6 +6,7 @@ const connetToMongo = require('./config/db.js')
 
 const userRoutes = require('./routes/userRoutes')
 const chatRoutes = require('./routes/chatRoutes')
+const messageRoutes = require('./routes/messageRoutes')
 
 
 connetToMongo()
@@ -21,5 +22,6 @@ app.get('/',(req,res)=> res.send('Server is running........'))
 
 app.use('/api/user',userRoutes)
 app.use('/api/chat',chatRoutes)
+app.use('/api/message',messageRoutes)
 
 app.listen(port,()=> console.log(` ChatApp Backend is running on server...${port} `))

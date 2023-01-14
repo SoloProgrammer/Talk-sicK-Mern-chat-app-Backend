@@ -1,5 +1,4 @@
 const Chat = require('../models/chatModel')
-const Message = require('../models/messageModel')
 const User = require('../models/userModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
 
@@ -201,7 +200,7 @@ const addTogroup = async (req, res) => {
 
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: "User added to Group", chat:chat[0], chats })
+        return res.status(200).json({ status: true, message: users.length > 1 ? "New members added to Group" : "New member added to Group", chat:chat[0], chats })
 
     } catch (error) {
         return errorRespose(res, status, error)
