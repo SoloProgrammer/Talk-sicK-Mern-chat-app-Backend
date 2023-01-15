@@ -65,11 +65,11 @@ const accesschat = async (req, res) => {
             try {
                 let createdChat = await Chat.create(newChat);
 
-                let fullchat = await Getfullchat(createdChat._id)
+                let chat = await Getfullchat(createdChat._id)
 
                 let chats = await fetchallchatsCommon(req)
 
-                res.status(201).json({ status, message: "Chat has been created Successfully", fullchat, chats })
+                res.status(201).json({ status, message: "Chat has been created Successfully", chat:chat[0], chats })
             } catch (error) {
                 return errorRespose(res, false, error)
             }
