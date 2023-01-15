@@ -28,7 +28,7 @@ const Getfullchat = async (chatId) => {
         .populate('groupAdmin', '-password')
         .populate('latestMessage');
 
-    chat = await User.populate(fullchat, {
+    chat = await User.populate(chat, {
         path: 'latestMessage.sender',
         select: 'name email avatar phone'
     })
