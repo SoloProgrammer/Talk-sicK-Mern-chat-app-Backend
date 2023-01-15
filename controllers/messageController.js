@@ -11,7 +11,7 @@ const sendMessage = async (req, res) => {
 
     try {
         const newMessage = {
-            content,
+            content:JSON.parse(content),
             sender: req.user._id,
             chat: chatId
         }
@@ -40,12 +40,10 @@ const fetchallMessages = async (req, res) => {
             chat: chatId
         }).populate('sender', '-password').populate('chat');
 
-        if (allMessages.length < 1) return BadRespose(res, false, "Some error occured to fetch messages try again!")
-
         res.status(200).json({ status: true, allMessages })
 
     } catch (error) {
-
+        return errorRespose(res,false,error)
     }
 
 }
