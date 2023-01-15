@@ -28,6 +28,11 @@ const Getfullchat = async (chatId) => {
         .populate('groupAdmin', '-password')
         .populate('latestMessage');
 
+    chat = await User.populate(fullchat, {
+        path: 'latestMessage.sender',
+        select: 'name email avatar phone'
+    })
+
     if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
 
     return chat;
@@ -60,17 +65,11 @@ const accesschat = async (req, res) => {
             try {
                 let createdChat = await Chat.create(newChat);
 
-                fullchat = await Chat.findById(createdChat._id)
-                    .select('-groupAvatar -groupAdmin')
-                    .populate('users', "-password")
-                    .populate("latestMessage")
+                let fullchat = await Getfullchat(createdChat._id)
 
-                fullchat = await User.populate(fullchat, {
-                    path: 'latestMessage.sender',
-                    select: 'name email avatar phone'
-                })
+                let chats = await fetchallchatsCommon(req)
 
-                res.status(201).json({ status, message: "Chat has been created Successfully", fullchat })
+                res.status(201).json({ status, message: "Chat has been created Successfully", fullchat, chats })
             } catch (error) {
                 return errorRespose(res, false, error)
             }
