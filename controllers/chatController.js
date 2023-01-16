@@ -21,7 +21,6 @@ const fetchallchatsCommon = async (req) => {
     if (!chats) return BadRespose(res, false, "Some Error occured please try again later")
     return chats
 }
-
 const Getfullchat = async (chatId) => {
     let chat = await Chat.find({ _id: chatId })
         .populate('users', '-password')
@@ -143,7 +142,7 @@ const addGroupAdmin = async (req, res) => {
 
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: "User updated as a GroupAdmin!", chat: chat[0], chats })
+        return res.status(200).json({ status: true, message: "Member updated as a GroupAdmin!", chat: chat[0], chats })
     } catch (error) {
         return errorRespose(res, false, error)
     }
@@ -160,7 +159,7 @@ const removeGroupAdmin = async (req, res) => {
 
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: "User has removed from GroupAdmin!", chat: chat[0], chats })
+        return res.status(200).json({ status: true, message: "Member removed from GroupAdmin!", chat: chat[0], chats })
 
     } catch (error) {
         return errorRespose(res, false, error)
@@ -227,7 +226,7 @@ const removeFromgroup = async (req, res) => {
 
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: "User remove from the group sucessfully", chat: chat[0], chats })
+        return res.status(200).json({ status: true, message: "Member removed from group sucessfully", chat: chat[0], chats })
     } catch (error) {
         return errorRespose(res, status, error)
     }
