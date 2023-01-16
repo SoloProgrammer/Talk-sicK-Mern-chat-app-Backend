@@ -7,11 +7,14 @@ const sendMessage = async (req, res) => {
 
     const { content, chatId } = req.body;
 
+
     if (!content || !chatId) return BadRespose(res, false, "Invalid data send with the request!");
+
+    console.log(content)
 
     try {
         const newMessage = {
-            content:JSON.parse(content),
+            content:content,
             sender: req.user._id,
             chat: chatId
         }
@@ -38,7 +41,7 @@ const fetchallMessages = async (req, res) => {
 
         let allMessages = await Message.find({
             chat: chatId
-        }).populate('sender', '-password').populate('chat');
+        }).populate('sender', '-password');
 
         res.status(200).json({ status: true, allMessages })
 
