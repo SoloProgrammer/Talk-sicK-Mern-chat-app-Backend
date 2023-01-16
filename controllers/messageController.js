@@ -7,14 +7,11 @@ const sendMessage = async (req, res) => {
 
     const { content, chatId } = req.body;
 
-
     if (!content || !chatId) return BadRespose(res, false, "Invalid data send with the request!");
-
-    console.log(content)
 
     try {
         const newMessage = {
-            content:content,
+            content,
             sender: req.user._id,
             chat: chatId
         }
@@ -26,7 +23,11 @@ const sendMessage = async (req, res) => {
             select: "name avatar email phone about"
         })
 
-        res.status(201).json({ status: true, message: "Message sent", fullmessage })
+        let allMessages = await Message.find({
+            chat: chatId
+        }).populate('sender', '-password').populate('chat');
+
+        res.status(201).json({ status: true, message: "Message sent", fullmessage,allMessages })
     } catch (error) {
         errorRespose(res, false, error)
     }
@@ -41,10 +42,10 @@ const fetchallMessages = async (req, res) => {
 
         let allMessages = await Message.find({
             chat: chatId
-        }).populate('sender', '-password');
+        }).populate('sender', '-password').populate('chat');
 
         res.status(200).json({ status: true, allMessages })
-
+        
     } catch (error) {
         return errorRespose(res,false,error)
     }
