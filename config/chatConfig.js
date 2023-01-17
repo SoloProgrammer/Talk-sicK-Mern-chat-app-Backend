@@ -17,7 +17,7 @@ const fetchallchatsCommon = async (req) => {
     })
 
     if (!chats) return BadRespose(res, false, "Some Error occured please try again later")
-    console.log(chats)
+
     return chats
 }
 
