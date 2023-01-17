@@ -1,26 +1,8 @@
 const Chat = require('../models/chatModel')
 const User = require('../models/userModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
+const { fetchallchatsCommon } = require('../config/chatConfig')
 
-
-const fetchallchatsCommon = async (req) => {
-    let chats = await Chat.find(
-        {
-            users: { $elemMatch: { $eq: req.user.id } }
-        })
-        .populate('users', '-password')
-        .populate('latestMessage')
-        .populate('groupAdmin', '-password')
-        .sort({ createdAt: -1 })
-
-    chats = await User.populate(chats, {
-        path: "latestMessage.sender",
-        select: "name avatar email phone"
-    })
-
-    if (!chats) return BadRespose(res, false, "Some Error occured please try again later")
-    return chats
-}
 const Getfullchat = async (chatId) => {
     let chat = await Chat.find({ _id: chatId })
         .populate('users', '-password')
@@ -68,7 +50,7 @@ const accesschat = async (req, res) => {
 
                 let chats = await fetchallchatsCommon(req)
 
-                res.status(201).json({ status, message: "Chat has been created Successfully", chat:chat[0], chats })
+                res.status(201).json({ status, message: "Chat has been created Successfully", chat: chat[0], chats })
             } catch (error) {
                 return errorRespose(res, false, error)
             }
