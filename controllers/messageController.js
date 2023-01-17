@@ -34,11 +34,19 @@ const sendMessage = async (req, res) => {
 
 
         // needs to refresh the latestmessage in the frontend!
-        let chats = await Chat.find({
-            users: {
-                $elemMatch: { $eq: req.user._id }
-            }
-        });
+        let chats = await Chat.find(
+            {
+                users: { $elemMatch: { $eq: req.user.id } }
+            })
+            .populate('users', '-password')
+            .populate('latestMessage')
+            .populate('groupAdmin', '-password')
+            .sort({ createdAt: -1 })
+
+        chats = await User.populate(chats, {
+            path: "latestMessage.sender",
+            select: "name avatar email phone"
+        })
 
         res.status(201).json({ status: true, message: "Message sent", fullmessage, allMessages, chats })
     } catch (error) {
