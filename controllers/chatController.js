@@ -197,7 +197,7 @@ const addTogroup = async (req, res) => {
 const removeFromgroup = async (req, res) => {
     const { chatId, userId } = req.body
     let status = false
-    
+
     if (!chatId || !userId) return BadRespose(res, status, "userId or chatId not send with the request body")
 
     try {

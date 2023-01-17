@@ -18,7 +18,7 @@ const chatSchema = new Schema({
     },
     groupAvatar: {
         type: String,
-        default:"https://cdn-icons-png.flaticon.com/512/4596/4596328.png"
+        default:"https://www.nicepng.com/png/detail/131-1318812_avatar-group-icon.png"
     },
     latestMessage: {
         type: Schema.Types.ObjectId,
