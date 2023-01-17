@@ -16,16 +16,21 @@ const sendMessage = async (req, res) => {
             chat: chatId
         }
         let message = await new Message(newMessage).save();
-        message = await (await message.populate('sender', '-password')).populate('chat')
+
+        await Chat.findByIdAndUpdate(chatId,{latestMessage:message._id}) 
+
+        // message = await Message.find({_id:message._id}).populate('sender','-password').populate('chat')
+
+        message = await (await message.populate('sender', '-password')).populate('chat') // same as above commented line!
 
         const fullmessage = await User.populate(message, {
             path: "chat.users",
             select: "name avatar email phone about"
         })
-
+        
         let allMessages = await Message.find({
             chat: chatId
-        }).populate('sender', '-password').populate('chat');
+        }).populate('sender', '-password').populate('chat'); 
 
         res.status(201).json({ status: true, message: "Message sent", fullmessage,allMessages })
     } catch (error) {

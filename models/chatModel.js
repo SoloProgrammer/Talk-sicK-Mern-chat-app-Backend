@@ -21,7 +21,7 @@ const chatSchema = new Schema({
         default:"https://cdn-icons-png.flaticon.com/512/4596/4596328.png"
     },
     latestMessage: {
-        type: String,
+        type: Schema.Types.ObjectId,
         ref: "messages"
     },
     groupAdmin: [{
