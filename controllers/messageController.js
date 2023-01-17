@@ -36,7 +36,7 @@ const sendMessage = async (req, res) => {
         // needs to refresh the latestmessage in the frontend!
         let chats = await Chat.find({
             users: {
-                $elmMatch: { $eq: req.user._id }
+                $elemMatch: { $eq: req.user._id }
             }
         });
 
