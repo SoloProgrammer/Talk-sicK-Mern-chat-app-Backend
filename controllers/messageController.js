@@ -17,7 +17,7 @@ const sendMessage = async (req, res) => {
         }
         let message = await new Message(newMessage).save();
 
-        await Chat.findByIdAndUpdate(chatId,{latestMessage:message._id}) 
+        await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id })
 
         // message = await Message.find({_id:message._id}).populate('sender','-password').populate('chat')
 
@@ -27,12 +27,20 @@ const sendMessage = async (req, res) => {
             path: "chat.users",
             select: "name avatar email phone about"
         })
-        
+
         let allMessages = await Message.find({
             chat: chatId
-        }).populate('sender', '-password').populate('chat'); 
+        }).populate('sender', '-password').populate('chat');
 
-        res.status(201).json({ status: true, message: "Message sent", fullmessage,allMessages })
+
+        // needs to refresh the latestmessage in the frontend!
+        let chats = await Chat.find({
+            users: {
+                $elmMatch: { $eq: req.user._id }
+            }
+        });
+
+        res.status(201).json({ status: true, message: "Message sent", fullmessage, allMessages, chats })
     } catch (error) {
         errorRespose(res, false, error)
     }
@@ -50,9 +58,9 @@ const fetchallMessages = async (req, res) => {
         }).populate('sender', '-password').populate('chat');
 
         res.status(200).json({ status: true, allMessages })
-        
+
     } catch (error) {
-        return errorRespose(res,false,error)
+        return errorRespose(res, false, error)
     }
 
 }
