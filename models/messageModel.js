@@ -13,7 +13,8 @@ const messageSchema = new Schema({
     chat:{
         type:Schema.Types.ObjectId,
         ref:"chats"
-    }
+    },
+    seenBy:[Schema.Types.ObjectId]
 },{timestamps:true})
 
 module.exports = mongoose.model('messages',messageSchema)

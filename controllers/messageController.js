@@ -15,7 +15,8 @@ const sendMessage = async (req, res) => {
         const newMessage = {
             content,
             sender: req.user._id,
-            chat: chatId
+            chat: chatId,
+            seenBy: [req.user._id]
         }
         let message = await new Message(newMessage).save();
 
@@ -62,5 +63,21 @@ const fetchallMessages = async (req, res) => {
     }
 
 }
+const updateMessageSeenBy = async (req, res) => {
+    try {
 
-module.exports = { sendMessage, fetchallMessages }
+        const { msgId } = req.body;
+
+        const updatedMsg = await Message.findByIdAndUpdate(msgId, { $addToSet: { seenBy: req.user._id } }, { new: true });
+
+        if (!updatedMsg) return BadRespose(res, false, "Message unable to seen due to Network Error!")
+
+        res.status(200).json({status:true});
+
+    } catch (error) {
+        return errorRespose(res, flase, error)
+    }
+
+}
+
+module.exports = { sendMessage, fetchallMessages, updateMessageSeenBy }
