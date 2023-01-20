@@ -29,17 +29,11 @@ const sendMessage = async (req, res) => {
         const fullmessage = await User.populate(message, {
             path: "chat.users",
             select: "name avatar email phone about"
-        })
-
-        let allMessages = await Message.find({
-            chat: chatId
-        }).populate('sender', '-password').populate('chat');
-
-
+        });
         // needs to refresh the latestmessage in the frontend!
         let chats = await fetchallchatsCommon(req)
 
-        res.status(201).json({ status: true, message: "Message sent", fullmessage, allMessages, chats })
+        res.status(201).json({ status: true, message: "Message sent", fullmessage, chats })
     } catch (error) {
         errorRespose(res, false, error)
     }
