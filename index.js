@@ -31,7 +31,7 @@ const server = app.listen(port, () => console.log(` ChatApp Backend is running o
 const io = require('socket.io')(server, {
     pingTimeout: 120000,
     cors: {
-        origin: process.env.CLIENT || "http://localhost:3000"
+        origin: "http://localhost:3000"
     }
 })
 
