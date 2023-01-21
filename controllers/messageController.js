@@ -31,15 +31,10 @@ const sendMessage = async (req, res) => {
             select: "name avatar email phone about"
         })
 
-        let allMessages = await Message.find({
-            chat: chatId
-        }).populate('sender', '-password').populate('chat');
-
-
-        // needs to refresh the latestmessage in the frontend!
+        // needs to refresh the chats to show the updated chat by latestmessage at the top in the frontend!
         let chats = await fetchallchatsCommon(req)
 
-        res.status(201).json({ status: true, message: "Message sent", fullmessage, allMessages, chats })
+        res.status(201).json({ status: true, message: "Message sent", fullmessage, chats })
     } catch (error) {
         errorRespose(res, false, error)
     }
@@ -72,7 +67,9 @@ const updateMessageSeenBy = async (req, res) => {
 
         if (!updatedMsg) return BadRespose(res, false, "Message unable to seen due to Network Error!")
 
-        res.status(200).json({status:true});
+        let chats = await fetchallchatsCommon(req) // refreshed chats will refresed the chats in the frontend to show that he seen the lastemsg !  
+
+        res.status(200).json({ status: true, chats });
 
     } catch (error) {
         return errorRespose(res, flase, error)
