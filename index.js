@@ -29,7 +29,6 @@ app.use('/api/message', messageRoutes)
 const server = app.listen(port, () => console.log(` ChatApp Backend is running on server...${port} `))
 
 const io = require('socket.io')(server, {
-    'transports': ['websocket', 'polling'],
     pingTimeout: 120000,
     cors: {
         origin: process.env.CLIENT || "http://localhost:3000",
