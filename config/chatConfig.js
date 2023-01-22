@@ -2,11 +2,11 @@ const Chat = require('../models/chatModel')
 const User = require('../models/userModel')
 const { BadRespose, errorRespose } = require('./errorStatus')
 
-const fetchallchatsCommon = async (req,userId) => {
+const fetchallchatsCommon = async () => {
     try {
         let chats = await Chat.find(
             {
-                users: { $elemMatch: { $eq: userId || req.user._id } }
+                users: { $elemMatch: { $eq: req.user._id } }
             })
             .populate('users', '-password')
             .populate('latestMessage')
