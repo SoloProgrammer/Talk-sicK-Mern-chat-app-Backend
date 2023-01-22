@@ -32,7 +32,7 @@ const sendMessage = async (req, res) => {
         })
 
         // needs to refresh the chats to show the updated chat by latestmessage at the top in the frontend!
-        let chats = await fetchallchatsCommon(req,res)
+        let chats = await fetchallchatsCommon()
 
         res.status(201).json({ status: true, message: "Message sent", fullmessage, chats })
     } catch (error) {
@@ -67,7 +67,7 @@ const updateMessageSeenBy = async (req, res) => {
 
         if (!updatedMsg) return BadRespose(res, false, "Message unable to seen due to Network Error!")
 
-        let chats = await fetchallchatsCommon(req,res) // refreshed chats will refresed the chats in the frontend to show that he seen the lastemsg !  
+        let chats = await fetchallchatsCommon() // refreshed chats will refresed the chats in the frontend to show that he seen the lastemsg !  
 
         res.status(200).json({ status: true, chats });
 
