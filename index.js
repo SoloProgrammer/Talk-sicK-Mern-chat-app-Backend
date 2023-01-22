@@ -10,6 +10,10 @@ const userRoutes = require('./routes/userRoutes')
 const chatRoutes = require('./routes/chatRoutes')
 const messageRoutes = require('./routes/messageRoutes')
 
+const Chat = require('./models/chatModel')
+const User = require('./models/userModel')
+const { fetchallchatsCommon } = require('./config/chatConfig.js')
+
 
 connetToMongo()
 
@@ -58,12 +62,27 @@ try {
 
             if (!chat.users) return console.log("chat.users is not defined");
 
-            chat.users.forEach(user => {
+            chat.users.forEach(async (user) => {
 
                 if (user._id == newMessageRecieved.sender._id) return
 
-                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages)
-            })
+                // refreshedChatswill be used for refreshing all of the chats of that user who recives a new message from another user...................!
+                let refreshedChats = await Chat.find(
+                    {
+                        users: { $elemMatch: { $eq: user._id } }
+                    })
+                    .populate('users', '-password')
+                    .populate('latestMessage')
+                    .populate('groupAdmin', '-password')
+                    .sort({ updatedAt: -1 })
+
+                    refreshedChats = await User.populate(refreshedChats, {
+                    path: "latestMessage.sender",
+                    select: "name avatar email phone"
+                })
+
+                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages, refreshedChats)
+            });
 
         })
     })
