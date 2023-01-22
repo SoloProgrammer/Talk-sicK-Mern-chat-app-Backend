@@ -2,7 +2,7 @@ const Chat = require('../models/chatModel')
 const User = require('../models/userModel')
 const { BadRespose, errorRespose } = require('./errorStatus')
 
-const fetchallchatsCommon = async () => {
+const fetchallchatsCommon = async (req) => {
     try {
         let chats = await Chat.find(
             {

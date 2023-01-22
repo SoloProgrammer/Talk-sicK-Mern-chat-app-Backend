@@ -81,7 +81,7 @@ try {
                 //     select: "name avatar email phone"
                 // })
 
-                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages)
+                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages, refreshedChats)
             });
 
         })
