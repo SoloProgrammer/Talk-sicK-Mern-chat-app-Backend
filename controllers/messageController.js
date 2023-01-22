@@ -54,7 +54,7 @@ const fetchallMessages = async (req, res) => {
         res.status(200).json({ status: true, allMessages })
 
     } catch (error) {
-        return errorRespose(res, false, error)
+        return errorRespose(res, false, { message: "Failed to load chats,Network unstable!" })
     }
 
 }
