@@ -62,26 +62,26 @@ try {
 
             if (!chat.users) return console.log("chat.users is not defined");
 
-            chat.users.forEach(async (user) => {
+            chat.users.forEach((user) => {
 
                 if (user._id == newMessageRecieved.sender._id) return
 
                 // refreshedChatswill be used for refreshing all of the chats of that user who recives a new message from another user...................!
-                let refreshedChats = await Chat.find(
-                    {
-                        users: { $elemMatch: { $eq: user._id } }
-                    })
-                    .populate('users', '-password')
-                    .populate('latestMessage')
-                    .populate('groupAdmin', '-password')
-                    .sort({ updatedAt: -1 })
+                // let refreshedChats = await Chat.find(
+                //     {
+                //         users: { $elemMatch: { $eq: user._id } }
+                //     })
+                //     .populate('users', '-password')
+                //     .populate('latestMessage')
+                //     .populate('groupAdmin', '-password')
+                //     .sort({ updatedAt: -1 })
 
-                    refreshedChats = await User.populate(refreshedChats, {
-                    path: "latestMessage.sender",
-                    select: "name avatar email phone"
-                })
+                //     refreshedChats = await User.populate(refreshedChats, {
+                //     path: "latestMessage.sender",
+                //     select: "name avatar email phone"
+                // })
 
-                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages, refreshedChats)
+                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages)
             });
 
         })
