@@ -48,7 +48,7 @@ const accesschat = async (req, res) => {
 
                 let chat = await Getfullchat(createdChat._id)
 
-                let chats = await fetchallchatsCommon(req,res)
+                let chats = await fetchallchatsCommon()
 
                 res.status(201).json({ status, message: "Chat has been created Successfully", chat: chat[0], chats })
             } catch (error) {
@@ -66,7 +66,7 @@ const fetchallchats = async (req, res) => {
     let status = false
     try {
 
-        let chats = await fetchallchatsCommon(req,res)
+        let chats = await fetchallchatsCommon()
 
         res.status(200).json({ status: true, chats })
     } catch (error) {
@@ -122,7 +122,7 @@ const addGroupAdmin = async (req, res) => {
 
         let chat = await Getfullchat(chatId)
 
-        let chats = await fetchallchatsCommon(req,res)
+        let chats = await fetchallchatsCommon()
 
         return res.status(200).json({ status: true, message: "Member updated as a GroupAdmin!", chat: chat[0], chats })
     } catch (error) {
@@ -139,7 +139,7 @@ const removeGroupAdmin = async (req, res) => {
 
         let chat = await Getfullchat(chatId)
 
-        let chats = await fetchallchatsCommon(req,res)
+        let chats = await fetchallchatsCommon()
 
         return res.status(200).json({ status: true, message: "Member removed from GroupAdmin!", chat: chat[0], chats })
 
@@ -185,7 +185,7 @@ const addTogroup = async (req, res) => {
 
         let chat = await Getfullchat(chatId)
 
-        let chats = await fetchallchatsCommon(req,res)
+        let chats = await fetchallchatsCommon()
 
         return res.status(200).json({ status: true, message: users.length > 1 ? "New members added to Group" : "New member added to Group", chat: chat[0], chats })
 
@@ -207,7 +207,7 @@ const removeFromgroup = async (req, res) => {
 
         let chat = await Getfullchat(chatId)
 
-        let chats = await fetchallchatsCommon(req,res)
+        let chats = await fetchallchatsCommon()
 
         return res.status(200).json({ status: true, message: "Member removed from group sucessfully", chat: chat[0], chats })
     } catch (error) {
