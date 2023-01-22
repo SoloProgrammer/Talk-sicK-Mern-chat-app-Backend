@@ -50,7 +50,7 @@ try {
             console.log("User Joined chatRoom: ", chatRoom)
         })
 
-        socket.on('new message', (newMessageRecieved, Previousmessages, refreshedChats) => {
+        socket.on('new message', (newMessageRecieved, Previousmessages) => {
 
             var chat = newMessageRecieved.chat
 
@@ -62,7 +62,7 @@ try {
 
                 if (user._id == newMessageRecieved.sender._id) return
 
-                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages, refreshedChats)
+                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages)
             })
 
         })
