@@ -10,11 +10,6 @@ const userRoutes = require('./routes/userRoutes')
 const chatRoutes = require('./routes/chatRoutes')
 const messageRoutes = require('./routes/messageRoutes')
 
-const Chat = require('./models/chatModel')
-const User = require('./models/userModel')
-const { fetchallchatsCommon } = require('./config/chatConfig.js')
-
-
 connetToMongo()
 
 const port = process.env.PORT || 8001
