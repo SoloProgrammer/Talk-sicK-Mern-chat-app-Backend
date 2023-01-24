@@ -17,6 +17,11 @@ const fetchallchatsCommon = async (req) => {
             path: "latestMessage.sender",
             select: "name avatar email phone"
         })
+
+        // needs to get the users who seen the lastetMessage inside seenBy aarry of lastestMessage and according to that at the first load of app if any of lastetMessage is not seen by user will gave him notification!
+        chats = await Chat.populate(chats,{
+            path:"latestMessage.chat"
+        });
     
         if (!chats) return BadRespose(res, false, "Some Error occured please try again later")
     

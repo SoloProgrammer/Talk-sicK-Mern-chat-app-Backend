@@ -25,7 +25,7 @@ app.use('/api/user', userRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/message', messageRoutes)
 
-const server = app.listen(port, () => console.log(` ChatApp Backend is running on server...${port} `))
+const server = app.listen(port, () => console.log(`Talk-o-Meter Backend is running on server...${port} `))
 
 const io = require('socket.io')(server, {
     pingTimeout: 120000,
