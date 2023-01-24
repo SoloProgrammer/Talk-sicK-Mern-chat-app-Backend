@@ -19,6 +19,11 @@ const fetchallchatsCommon = async (req) => {
         })
 
         // needs to get the users who seen the lastetMessage inside seenBy aarry of lastestMessage and according to that at the first load of app if any of lastetMessage is not seen by user will gave him notification!
+
+        // OR
+
+        // populating the chat in the lastetMessage of user to inplement the notification logic in frontend at the first load if chats !
+
         chats = await Chat.populate(chats,{
             path:"latestMessage.chat"
         });
