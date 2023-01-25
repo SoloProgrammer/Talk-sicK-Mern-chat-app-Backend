@@ -35,13 +35,30 @@ const io = require('socket.io')(server, {
     }
 })
 
+let activeUsers = []
 try {
     io.on("connection", (socket) => {
         console.log("connected to socket.io");
 
+
         socket.on('setup', (userData) => {
             socket.join(userData._id);
-            socket.emit("connected")
+            socket.emit("connected");
+            if(!(activeUsers.map(u => u.userId).includes(userData._id))){
+                activeUsers.push({
+                    userId:userData._id,
+                    socketId:socket.id
+                });
+
+                console.log(activeUsers);
+            };
+            io.emit('activeUsers',activeUsers);
+        });
+        
+        socket.on("disconnect",()=>{
+            activeUsers = activeUsers.filter(u => u.socketId !== socket.id);
+            console.log("after disconnecting user",activeUsers)
+            io.emit('activeUsers',activeUsers)
         })
 
         socket.on('join chat', (chatRoom) => {
