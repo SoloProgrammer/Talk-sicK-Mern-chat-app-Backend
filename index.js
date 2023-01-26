@@ -27,6 +27,10 @@ app.use('/api/message', messageRoutes)
 
 const server = app.listen(port, () => console.log(`Talk-o-Meter Backend is running on server...${port} `))
 
+
+
+
+///////////////////// socket server starts here.............................
 const io = require('socket.io')(server, {
     pingTimeout: 120000,
     cors: {
@@ -44,27 +48,35 @@ try {
         socket.on('setup', (userData) => {
             socket.join(userData._id);
             socket.emit("connected");
-            if(!(activeUsers.map(u => u.userId).includes(userData._id))){
+            if (!(activeUsers.map(u => u.userId).includes(userData._id))) {
                 activeUsers.push({
-                    userId:userData._id,
-                    socketId:socket.id
+                    userId: userData._id,
+                    socketId: socket.id
                 });
 
                 console.log(activeUsers);
             };
-            io.emit('activeUsers',activeUsers);
+            io.emit('activeUsers', activeUsers);
         });
-        
-        socket.on("disconnect",()=>{
+
+
+        socket.on("disconnect", () => {
             activeUsers = activeUsers.filter(u => u.socketId !== socket.id);
-            console.log("after disconnecting user",activeUsers)
-            io.emit('activeUsers',activeUsers)
+            console.log("after disconnecting user", activeUsers)
+            io.emit('activeUsers', activeUsers)
         })
 
         socket.on('join chat', (chatRoom) => {
             socket.join(chatRoom)
             console.log("User Joined chatRoom: ", chatRoom)
         })
+
+
+        // taking the user from client side for the groupchat to know who is actually typing from tyhe group will not use this for personal chat
+        socket.on("typing", (room,user) => socket.in(room).emit("typing", user))
+
+        socket.on("stop typing", (room) => socket.in(room).emit("stop typing"))
+
 
         socket.on('new message', (newMessageRecieved, Previousmessages) => {
 
