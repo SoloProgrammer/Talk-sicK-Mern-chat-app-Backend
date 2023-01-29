@@ -5,6 +5,7 @@ var cors = require('cors')
 require('dotenv').config()
 
 const connetToMongo = require('./config/db.js')
+const connectToSocket = require('./config/socket.js')
 
 const userRoutes = require('./routes/userRoutes')
 const chatRoutes = require('./routes/chatRoutes')
@@ -27,77 +28,4 @@ app.use('/api/message', messageRoutes)
 
 const server = app.listen(port, () => console.log(`Talk-o-Meter Backend is running on server...${port} `))
 
-
-
-
-///////////////////// socket server starts here.............................
-const io = require('socket.io')(server, {
-    pingTimeout: 120000,
-    cors: {
-        origin: process.env.CLIENT || "http://localhost:3000",
-        methods: ["GET", "POST", "PUT", "DELETE"]
-    }
-})
-
-let activeUsers = []
-try {
-    io.on("connection", (socket) => {
-        console.log("connected to socket.io");
-
-
-        socket.on('setup', (userData) => {
-            socket.join(userData._id);
-            socket.emit("connected");
-            if (!(activeUsers.map(u => u.userId).includes(userData._id))) {
-                activeUsers.push({
-                    userId: userData._id,
-                    socketId: socket.id
-                });
-
-                console.log(activeUsers);
-            };
-            io.emit('activeUsers', activeUsers);
-        });
-
-
-        socket.on("disconnect", () => {
-            activeUsers = activeUsers.filter(u => u.socketId !== socket.id);
-            console.log("after disconnecting user", activeUsers)
-            io.emit('activeUsers', activeUsers)
-        })
-
-        socket.on('join chat', (chatRoom) => {
-            socket.join(chatRoom)
-            console.log("User Joined chatRoom: ", chatRoom)
-        })
-
-
-        // taking the user from client side for the groupchat to know who is actually typing from tyhe group will not use this for personal chat
-        socket.on("typing", (room, user) => {
-            // console.log(user, "is typing in", room);
-            socket.in(room).emit("typing", user, room)
-        })
-
-        socket.on("stop typing", (room) => socket.in(room).emit("stop typing"))
-
-
-        socket.on('new message', (newMessageRecieved, Previousmessages) => {
-
-            var chat = newMessageRecieved.chat
-
-            if (!chat) return console.log("chat not defined");
-
-            if (!chat.users) return console.log("chat.users is not defined");
-
-            chat.users.forEach(async (user) => {
-
-                if (user._id == newMessageRecieved.sender._id) return
-
-                socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages)
-            });
-
-        })
-    })
-} catch (error) {
-    console.log("Some error occured while connecting with the socket.io ERROR: ", error)
-}   
+connectToSocket(server)

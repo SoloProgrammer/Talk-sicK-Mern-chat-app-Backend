@@ -105,8 +105,9 @@ const creategroup = async (req, res) => {
         if (Fullgroup.length < 1) {
             return BadRespose(res, status, "Failed to create group try again later")
         }
+        let chats = await fetchallchatsCommon(req)
 
-        return res.status(201).json({ status: true, message: "New Group created sucessfully", Fullgroup: Fullgroup[0] })
+        return res.status(201).json({ status: true, message: "New Group created sucessfully", Fullgroup: Fullgroup[0],chats })
     } catch (error) {
         return errorRespose(res, status, error)
     }
