@@ -18,7 +18,7 @@ const chatSchema = new Schema({
     },
     groupAvatar: {
         type: String,
-        default:"https://www.nicepng.com/png/detail/131-1318812_avatar-group-icon.png"
+        default:"https://tse2.mm.bing.net/th?id=OIP.OtLqKEL4eIvyiNSJZ4pT-wHaHa&pid=Api&P=0"
     },
     latestMessage: {
         type: Schema.Types.ObjectId,
