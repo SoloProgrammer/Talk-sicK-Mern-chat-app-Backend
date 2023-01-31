@@ -41,7 +41,9 @@ const sendMessage = async (req, res) => {
 }
 const fetchallMessages = async (req, res) => {
 
+    let query = req.query
     const chatId = req.params.chatId;
+    let numberOfMsgsPerload = 15;
 
     if (!chatId) return BadRespose(res, false, "chatId param not send with the request!")
 
@@ -49,7 +51,7 @@ const fetchallMessages = async (req, res) => {
 
         let allMessages = await Message.find({
             chat: chatId
-        }).populate('sender', '-password').populate('chat');
+        }).skip(query.from).limit(numberOfMsgsPerload).populate('sender', '-password').populate('chat');
 
         res.status(200).json({ status: true, allMessages })
 
