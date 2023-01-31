@@ -24,6 +24,9 @@ const chatSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "messages"
     },
+    totalMessages:{
+        type:Number
+    },
     groupAdmin: [{
         type: Schema.Types.ObjectId,
         ref: "users"
