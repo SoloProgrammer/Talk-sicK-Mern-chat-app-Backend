@@ -4,7 +4,6 @@ const User = require('../models/userModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
 const { fetchallchatsCommon } = require('../config/chatConfig')
 
-
 const sendMessage = async (req, res) => {
 
     const { content, chatId } = req.body;
@@ -55,7 +54,7 @@ const fetchallMessages = async (req, res) => {
 
         let allMessages = await Message.find({
             chat: chatId
-        }).skip(query.from).populate('sender', '-password').populate('chat');
+        }).populate('sender', '-password').populate('chat');
 
         res.status(200).json({ status: true, allMessages })
 
