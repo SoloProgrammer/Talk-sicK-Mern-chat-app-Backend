@@ -30,9 +30,10 @@ const sendMessage = async (req, res) => {
             select: "name avatar email phone about"
         });
 
-        // let totalmessages = (await Message.find({ _id: chatId })).length;
+        // updating total messages inthe chat model of id chatId..................
+        let totalmessages = (await Message.find({ chat: chatId })).length;
 
-        // await Chat.findByIdAndUpdate(chatId, { totalmessages })
+        await Chat.findByIdAndUpdate(chatId, { totalMessages:totalmessages })
 
         // needs to refresh the chats to show the updated chat by latestmessage at the top in the frontend!
         let chats = await fetchallchatsCommon(req)
@@ -44,9 +45,7 @@ const sendMessage = async (req, res) => {
 }
 const fetchallMessages = async (req, res) => {
 
-    let query = req.query
     const chatId = req.params.chatId;
-    let numberOfMsgsPerload = 5;
 
     if (!chatId) return BadRespose(res, false, "chatId param not send with the request!")
 
