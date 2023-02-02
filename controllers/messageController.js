@@ -33,7 +33,7 @@ const sendMessage = async (req, res) => {
         // updating total messages inthe chat model of id chatId..................
         let totalmessages = (await Message.find({ chat: chatId })).length;
 
-        await Chat.findByIdAndUpdate(chatId, { totalMessages:totalmessages })
+        await Chat.findByIdAndUpdate(chatId, { totalMessages: totalmessages })
 
         // needs to refresh the chats to show the updated chat by latestmessage at the top in the frontend!
         let chats = await fetchallchatsCommon(req)

@@ -18,14 +18,14 @@ const chatSchema = new Schema({
     },
     groupAvatar: {
         type: String,
-        default:"https://tse2.mm.bing.net/th?id=OIP.OtLqKEL4eIvyiNSJZ4pT-wHaHa&pid=Api&P=0"
+        default: "https://tse2.mm.bing.net/th?id=OIP.OtLqKEL4eIvyiNSJZ4pT-wHaHa&pid=Api&P=0"
     },
     latestMessage: {
         type: Schema.Types.ObjectId,
         ref: "messages"
     },
-    totalMessages:{
-        type:Number
+    totalMessages: {
+        type: Number
     },
     groupAdmin: [{
         type: Schema.Types.ObjectId,
