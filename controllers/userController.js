@@ -27,6 +27,23 @@ const createUser = async (req, res) => {
     }
 }
 
+const updateUser = async (req,res) => {
+    try {
+        if (!req.body) {
+            return BadRespose(res, false, "Req bosy not send with the request..!")
+        }
+
+        let updatedUser = await User.findByIdAndUpdate(req.user._id, { $set: { ...req.body } }, { new: true });
+
+        if (!updatedUser) return BadRespose(res, false, "Some Error while updating..!");
+
+        res.status(200).json({ status: true, updatedUser, message: "Details updated Sucessfully 🎉" })
+
+    } catch (error) {
+        return errorRespose(res, false, error)
+    }
+}
+
 const authUser = async (req, res) => {
     const { email, password } = req.body;
     let status = false
@@ -63,7 +80,7 @@ const getUser = async (req, res) => {
     }
 }
 
-const searchuser = async (req, res) => {
+const searchUser = async (req, res) => {
 
     let status = false
     let query = req.query.search
@@ -80,11 +97,11 @@ const searchuser = async (req, res) => {
 
         const searchResults = await User.find(keyword).find({ _id: { $ne: req.user.id } }).select('-password');
 
-        res.status(200).json({ status:true, searchResults })
+        res.status(200).json({ status: true, searchResults })
 
     } catch (error) {
         errorRespose(res, status, error)
     }
 }
 
-module.exports = { createUser, authUser, searchuser, getUser }
+module.exports = { createUser, authUser, searchUser, getUser, updateUser }
