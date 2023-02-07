@@ -124,7 +124,9 @@ const updategroup = async (req, res) => {
 
         if (!updatedGroup) return BadRespose(res, false, "unable to update profile, Network Error..!");
 
-        res.status(200).json({ status: true, updatedGroup, message: "Profile Updated Sucessfully 🎉" })
+        let chats = await fetchallchatsCommon(req)
+
+        res.status(200).json({ status: true, chats, message: "Profile Updated Sucessfully 🎉" })
 
     } catch (error) {
         return errorRespose(res, false, error)
