@@ -37,7 +37,7 @@ const updateUser = async (req,res) => {
 
         if (!updatedUser) return BadRespose(res, false, "Some Error while updating..!");
 
-        res.status(200).json({ status: true, updatedUser, message: "Details updated Sucessfully 🎉" })
+        res.status(200).json({ status: true, updatedUser, message: "Profile Updated Sucessfully 🎉" })
 
     } catch (error) {
         return errorRespose(res, false, error)
