@@ -126,7 +126,7 @@ const updategroup = async (req, res) => {
 
         let chats = await fetchallchatsCommon(req)
 
-        res.status(200).json({ status: true, chats, message: "Profile Updated Sucessfully 🎉" })
+        res.status(200).json({ status: true, chats, message: "Group Profile Updated Sucessfully 🎉" })
 
     } catch (error) {
         return errorRespose(res, false, error)
