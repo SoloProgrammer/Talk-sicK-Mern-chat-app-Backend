@@ -107,9 +107,27 @@ const creategroup = async (req, res) => {
         }
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(201).json({ status: true, message: "New Group created sucessfully", Fullgroup: Fullgroup[0],chats })
+        return res.status(201).json({ status: true, message: "New Group created sucessfully", Fullgroup: Fullgroup[0], chats })
     } catch (error) {
         return errorRespose(res, status, error)
+    }
+}
+const updategroup = async (req, res) => {
+    if (!req.body) return BadRespose(res, false, "reqBody not send with the request..!");
+
+    let { chatId, detailsToUpdate } = req.body;
+
+    if (!chatId) return BadRespose(res, false, "chatId not send with the request..!");
+
+    try {
+        let updatedGroup = await Chat.findByIdAndUpdate(chatId, { $set: detailsToUpdate }, { new: true });
+
+        if (!updatedGroup) return BadRespose(res, false, "unable to update profile, Network Error..!");
+
+        res.status(200).json({ status: true, updatedGroup, message: "Profile Updated Sucessfully 🎉" })
+
+    } catch (error) {
+        return errorRespose(res, false, error)
     }
 }
 const addGroupAdmin = async (req, res) => {
@@ -147,27 +165,6 @@ const removeGroupAdmin = async (req, res) => {
     } catch (error) {
         return errorRespose(res, false, error)
     }
-}
-const renamegroup = async (req, res) => {
-    const { chatId, groupname } = req.body
-    let status = false
-    if (!chatId || chatId == "") return res.status(400).json({ status, message: "ChatId params is not send with the request body" })
-    if (!groupname) return res.status(400).json({ status, message: "Please provide the Groupname to update" })
-
-    let chatWithUpdatedGroupname = await Chat.findByIdAndUpdate(chatId, { chatName: groupname }, { new: true })
-
-    // let Fullgroup = await Chat.find({ _id: chatWithUpdatedGroupname.id })
-    //     .populate('users', '-password')
-    //     .populate('latestMessage')
-    //     .populate('groupAdmin','-password')
-
-    // Fullgroup = await User.populate(Fullgroup, {
-    //     path: 'latestMessage.sender',
-    //     select: 'name email avatar phone'
-    // })
-
-    res.status(200).json({ status: true, message: "Groupname updated successfully", chatWithUpdatedGroupname })
-
 }
 const addTogroup = async (req, res) => {
     const { users, chatId } = req.body;
@@ -216,4 +213,4 @@ const removeFromgroup = async (req, res) => {
     }
 }
 
-module.exports = { accesschat, fetchallchats, creategroup, renamegroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 
+module.exports = { accesschat, fetchallchats, creategroup, updategroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 
