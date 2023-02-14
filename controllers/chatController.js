@@ -1,5 +1,6 @@
 const Chat = require('../models/chatModel')
 const User = require('../models/userModel')
+const Message = require('../models/messageModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
 const { fetchallchatsCommon } = require('../config/chatConfig')
 
@@ -26,8 +27,8 @@ const accesschat = async (req, res) => {
         let isChat = await Chat.find({
             isGroupchat: false,
             $and: [
-                { users: { $elemMatch: { $eq: req.user.id } } },
-                { users: { $elemMatch: { $eq: userId } } }
+                { users: { $elemMatch: { $eq: req.user._id } } },
+                { users: { $elemMatch: { $eq: userId } } },
             ]
         }).select('-groupAvatar -groupAdmin').populate('users', '-password').populate('latestMessage')
 
@@ -36,7 +37,10 @@ const accesschat = async (req, res) => {
             select: 'name email avatar phone'
         })
 
+        isChat.length && await Chat.findByIdAndUpdate(isChat[0]._id, { $pull: { deletedFor: req.user._id } })
+
         let status = true
+
         if (isChat.length < 1) {
             let newChat = {
                 chatName: 'personalChat',
@@ -46,20 +50,47 @@ const accesschat = async (req, res) => {
             try {
                 let createdChat = await Chat.create(newChat);
 
-                let chat = await Getfullchat(createdChat._id)
+                let fullCreatedChat = await Getfullchat(createdChat._id);
 
-                let chats = await fetchallchatsCommon(req)
+                let chats = await fetchallchatsCommon(req);
 
-                res.status(201).json({ status, message: "Chat has been created Successfully", chat: chat[0], chats })
+                res.status(201).json({ status, message: "Chat has been created Successfully", chat: fullCreatedChat[0], chats })
             } catch (error) {
                 return errorRespose(res, false, error)
             }
         }
         else {
-            res.status(201).json({ status, isChat })
+            let chats = await fetchallchatsCommon(req);
+            res.status(201).json({ status, message: "Chat has been created Successfully", chat: isChat[0], chats })
         }
     } catch (error) {
         return errorRespose(res, false, error)
+    }
+}
+const deleteChat = async (req, res) => {
+    try {
+        let { chatId } = req.body;
+
+        if (!chatId) return BadRespose(res, false, "ChatId not send with the request!");
+
+        let chat = await Chat.findById(chatId);
+
+        if (!chat) return BadRespose(res, false, "Chat with this ChatId not found..!");
+
+        if (chat.deletedFor.length > 0) {
+
+            await Chat.deleteOne({ _id: chatId });
+            await Message.deleteMany({ chat: chatId });
+            return res.status(200).json({ status: true, message: "Chat deleted" });
+        }
+
+        let deletedChat = await Chat.findByIdAndUpdate(chatId, { $push: { deletedFor: req.user._id } }, { new: true });
+
+        if (!deletedChat) return BadRespose(res, false, "Failed to delete chat!");
+
+        return res.status(200).json({ status: true, message: "Chat deleted" })
+    } catch (error) {
+        return errorRespose(res, false, error.message)
     }
 }
 const fetchallchats = async (req, res) => {
@@ -215,4 +246,4 @@ const removeFromgroup = async (req, res) => {
     }
 }
 
-module.exports = { accesschat, fetchallchats, creategroup, updategroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 
+module.exports = { accesschat, deleteChat, fetchallchats, creategroup, updategroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 

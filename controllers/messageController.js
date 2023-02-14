@@ -19,7 +19,7 @@ const sendMessage = async (req, res) => {
         }
         let message = await new Message(newMessage).save();
 
-        await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id })
+        await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id, $set: { deletedFor: [] } })
 
         // message = await Message.find({_id:message._id}).populate('sender','-password').populate('chat')
 

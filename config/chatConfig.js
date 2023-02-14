@@ -6,13 +6,17 @@ const fetchallchatsCommon = async (req) => {
     try {
         let chats = await Chat.find(
             {
-                users: { $elemMatch: { $eq: req.user._id } }
+                users: { $elemMatch: { $eq: req.user._id } } ,
+                $or: [
+                    { deletedFor: { $elemMatch: { $ne: req.user._id } } },
+                    { deletedFor: {$in: [null, [] ] } }
+                ]
             })
             .populate('users', '-password')
             .populate('latestMessage')
             .populate('groupAdmin', '-password')
             .sort({ updatedAt: -1 })
-    
+
         chats = await User.populate(chats, {
             path: "latestMessage.sender",
             select: "name avatar email phone"
@@ -24,15 +28,15 @@ const fetchallchatsCommon = async (req) => {
 
         // populating the chat in the lastetMessage of user to inplement the notification logic in frontend at the first load if chats !
 
-        chats = await Chat.populate(chats,{
-            path:"latestMessage.chat"
+        chats = await Chat.populate(chats, {
+            path: "latestMessage.chat"
         });
-    
+
         if (!chats) return BadRespose(res, false, "Some Error occured please try again later")
-    
+
         return chats
     } catch (error) {
-        return errorRespose(res,false,{message:"Failed to load chats from server, Network issue!"})
+        return errorRespose(res, false, { message: "Failed to load chats from server, Network issue!" })
     }
 }
 

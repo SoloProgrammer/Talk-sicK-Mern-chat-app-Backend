@@ -53,7 +53,6 @@ const connectToSocket = (server) => {
 
             socket.on("stop typing", (room) => socket.in(room).emit("stop typing"))
 
-
             socket.on('new message', (newMessageRecieved, Previousmessages) => {
 
                 var chat = newMessageRecieved.chat
