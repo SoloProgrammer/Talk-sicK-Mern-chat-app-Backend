@@ -45,7 +45,8 @@ const accesschat = async (req, res) => {
             let newChat = {
                 chatName: 'personalChat',
                 users: [req.user.id, userId],
-                isGroupchat: false
+                isGroupchat: false,
+                createdBy:req.user._id
             }
             try {
                 let createdChat = await Chat.create(newChat);
