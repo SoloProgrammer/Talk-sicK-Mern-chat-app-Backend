@@ -78,7 +78,7 @@ const deleteChat = async (req, res) => {
 
         if (!chat) return BadRespose(res, false, "Chat with this ChatId not found..!");
 
-        if (chat.deletedFor.length > 0) {
+        if (chat.deletedFor.length > 0 || !chat.latestMessage) {
 
             await Chat.deleteOne({ _id: chatId });
             await Message.deleteMany({ chat: chatId });
