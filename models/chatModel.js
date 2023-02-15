@@ -16,10 +16,10 @@ const chatSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "users"
     }],
-    createdBy:{
+    createdBy:[{
         type:Schema.Types.ObjectId,
         ref:"users"
-    },
+    }],
     isGroupchat: {
         type: Boolean,
         default: false

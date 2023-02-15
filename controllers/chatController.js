@@ -37,7 +37,7 @@ const accesschat = async (req, res) => {
             select: 'name email avatar phone'
         })
 
-        isChat.length && await Chat.findByIdAndUpdate(isChat[0]._id, { $pull: { deletedFor: req.user._id } })
+        isChat.length && await Chat.findByIdAndUpdate(isChat[0]._id, { $pull: { deletedFor: req.user._id }, $push: { createdBy: req.user._id } })
 
         let status = true
 
@@ -46,7 +46,7 @@ const accesschat = async (req, res) => {
                 chatName: 'personalChat',
                 users: [req.user.id, userId],
                 isGroupchat: false,
-                createdBy:req.user._id
+                createdBy: req.user._id
             }
             try {
                 let createdChat = await Chat.create(newChat);
@@ -85,7 +85,7 @@ const deleteChat = async (req, res) => {
             return res.status(200).json({ status: true, message: "Chat deleted" });
         }
 
-        let deletedChat = await Chat.findByIdAndUpdate(chatId, { $push: { deletedFor: req.user._id } }, { new: true });
+        let deletedChat = await Chat.findByIdAndUpdate(chatId, { $push: { deletedFor: req.user._id }, $pull: { createdBy: req.user._id } }, { new: true });
 
         if (!deletedChat) return BadRespose(res, false, "Failed to delete chat!");
 

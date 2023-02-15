@@ -7,15 +7,19 @@ const fetchallchatsCommon = async (req) => {
         let chats = await Chat.find(
             {
                 users: { $elemMatch: { $eq: req.user._id } },
-                $and:[
-                    { $or: [
-                        { deletedFor: { $elemMatch: { $ne: req.user._id } } },
-                        { deletedFor: { $in: [null, []] } }
-                    ] },
-                    { $or: [
-                        { latestMessage: { $exists: true } },
-                        { createdBy: req.user._id }
-                    ]  }
+                $and: [
+                    {
+                        $or: [
+                            { deletedFor: { $elemMatch: { $ne: req.user._id } } },
+                            { deletedFor: { $in: [null, []] } }
+                        ]
+                    },
+                    {
+                        $or: [
+                            { latestMessage: { $exists: true } },
+                            { createdBy: { $elemMatch: { $eq: req.user._id } } }
+                        ]
+                    }
                 ]
             })
             .populate('users', '-password')
