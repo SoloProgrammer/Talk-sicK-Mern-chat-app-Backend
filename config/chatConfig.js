@@ -25,7 +25,7 @@ const fetchallchatsCommon = async (req) => {
             .populate('users', '-password')
             .populate('latestMessage')
             .populate('groupAdmin', '-password')
-            .sort({ updatedAt: -1 })
+            .sort({ latestMessage: -1 })
 
         chats = await User.populate(chats, {
             path: "latestMessage.sender",

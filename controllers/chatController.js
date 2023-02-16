@@ -94,6 +94,31 @@ const deleteChat = async (req, res) => {
         return errorRespose(res, false, error.message)
     }
 }
+const pinOrUnpinChat = async (req, res) => {
+    let { chatId } = req.body;
+
+    if (!chatId) return BadRespose(res, false, "ChatId not send with the request!");
+
+    try {
+        let chat = await Chat.findById(chatId);
+
+        if (!chat) return BadRespose(res, false, "Chat with this ChatId not found..!");
+
+        if (chat.pinnedBy.includes(req.user._id)) {
+            await Chat.findByIdAndUpdate(chatId, { $pull: { pinnedBy: req.user._id } }, { new: true })
+            return res.status(200).json({ status: true, message: "Chat unpinned" })
+        }
+        else {
+            await Chat.findByIdAndUpdate(chatId, { $push: { pinnedBy: req.user._id } }, { new: true })
+            return res.status(200).json({ status: true, message: "Chat pinned" })
+        }
+
+
+
+    } catch (error) {
+        errorRespose(res, false, error)
+    }
+}
 const fetchallchats = async (req, res) => {
     let status = false
     try {
@@ -247,4 +272,4 @@ const removeFromgroup = async (req, res) => {
     }
 }
 
-module.exports = { accesschat, deleteChat, fetchallchats, creategroup, updategroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 
+module.exports = { accesschat, deleteChat,pinOrUnpinChat, fetchallchats, creategroup, updategroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 
