@@ -141,7 +141,8 @@ const creategroup = async (req, res) => {
         chatName: groupName,
         users: [req.user.id, ...users],
         isGroupchat: true,
-        groupAdmin: [req.user.id]
+        groupAdmin: [req.user.id],
+        createdBy: [req.user._id]
     }
 
     if (groupAvatar) groupdata.groupAvatar = groupAvatar
