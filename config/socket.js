@@ -16,8 +16,6 @@ const connectToSocket = (server) => {
     try {
         io.on("connection", (socket) => {
             console.log("connected to socket.io");
-
-
             socket.on('setup', (userData) => {
                 socket.join(userData._id);
                 socket.emit("connected");
@@ -53,7 +51,7 @@ const connectToSocket = (server) => {
 
             socket.on("stop typing", (room) => socket.in(room).emit("stop typing"))
 
-            socket.on('new message', (newMessageRecieved, Previousmessages) => {
+            socket.on('new message', (newMessageRecieved, Previousmessages, user) => {
 
                 var chat = newMessageRecieved.chat
 
@@ -65,7 +63,7 @@ const connectToSocket = (server) => {
 
                     if (user._id == newMessageRecieved.sender._id) return
 
-                    socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages)
+                    socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages, user)
                 });
 
             })
