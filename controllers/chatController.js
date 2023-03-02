@@ -85,7 +85,7 @@ const deleteChat = async (req, res) => {
             return res.status(200).json({ status: true, message: "Chat deleted" });
         }
 
-        let deletedChat = await Chat.findByIdAndUpdate(chatId, { $push: { deletedFor: req.user._id }, $pull: { createdBy: req.user._id, pinnedBy: req.user._id,archivedBy:req.user._id } }, { new: true });
+        let deletedChat = await Chat.findByIdAndUpdate(chatId, { $push: { deletedFor: req.user._id }, $pull: { createdBy: req.user._id, pinnedBy: req.user._id, archivedBy: req.user._id, mutedNotificationBy: req.user._id } }, { new: true });
 
         if (!deletedChat) return BadRespose(res, false, "Failed to delete chat!");
 
@@ -134,6 +134,29 @@ const archiveOrUnarchiveChat = async (req, res) => {
         else {
             await Chat.findByIdAndUpdate(chatId, { $push: { archivedBy: req.user._id } }, { new: true })
             return res.status(200).json({ status: true, message: "Chat archived" })
+        }
+
+    } catch (error) {
+        errorRespose(res, false, error)
+    }
+}
+const muteOrUnmuteNotification = async (req, res) => {
+    let { chatId } = req.body;
+
+    if (!chatId) return BadRespose(res, false, "ChatId not send with the request!");
+
+    try {
+        let chat = await Chat.findById(chatId);
+
+        if (!chat) return BadRespose(res, false, "Chat with this ChatId not found..!");
+
+        if (chat.mutedNotificationBy.includes(req.user._id)) {
+            await Chat.findByIdAndUpdate(chatId, { $pull: { mutedNotificationBy: req.user._id } }, { new: true })
+            return res.status(200).json({ status: true, message: "Notification unMuted" })
+        }
+        else {
+            await Chat.findByIdAndUpdate(chatId, { $push: { mutedNotificationBy: req.user._id } }, { new: true })
+            return res.status(200).json({ status: true, message: "Notification Muted" })
         }
 
     } catch (error) {
@@ -280,7 +303,7 @@ const removeFromgroup = async (req, res) => {
     if (!chatId || !userId) return BadRespose(res, status, "userId or chatId not send with the request body")
 
     try {
-        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId, groupAdmin: userId,archivedBy:userId } }, { new: true });
+        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId, groupAdmin: userId, archivedBy: userId } }, { new: true });
 
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
@@ -294,4 +317,4 @@ const removeFromgroup = async (req, res) => {
     }
 }
 
-module.exports = { accesschat, deleteChat, pinOrUnpinChat, archiveOrUnarchiveChat, fetchallchats, creategroup, updategroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 
+module.exports = { accesschat, deleteChat, pinOrUnpinChat, muteOrUnmuteNotification, archiveOrUnarchiveChat, fetchallchats, creategroup, updategroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 

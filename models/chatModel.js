@@ -28,6 +28,10 @@ const chatSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "users"
     }],
+    mutedNotificationBy:[{
+        type:Schema.Types.ObjectId,
+        ref:"users",
+    }],
     isGroupchat: {
         type: Boolean,
         default: false
