@@ -76,7 +76,7 @@ const updateMessageSeenBy = async (req, res) => {
         res.status(200).json({ status: true, chats });
 
     } catch (error) {
-        return errorRespose(res, flase, error)
+        return errorRespose(res, false, error)
     }
 
 }
