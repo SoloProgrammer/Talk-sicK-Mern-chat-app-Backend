@@ -36,9 +36,17 @@ const sendMessage = async (req, res) => {
             unseenMsgCountObj = chat.unseenMsgsCountBy;
 
             Object.keys(unseenMsgCountObj).forEach(k => {
-                unseenMsgCountObj[k] = unseenMsgCountObj[k] + 1
+                
+                if(k !== String(req.user._id)){
+                    unseenMsgCountObj[k] = unseenMsgCountObj[k] + 1
+                }
+                else {
+                    unseenMsgCountObj[k] = 0
+                }
             })
         }
+
+        console.log(unseenMsgCountObj);
 
         await Chat.findByIdAndUpdate(chatId, { unseenMsgsCountBy: unseenMsgCountObj })
 
