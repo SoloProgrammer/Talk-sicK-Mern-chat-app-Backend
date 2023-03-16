@@ -10,7 +10,8 @@ const fetchallchatsCommon = async (req) => {
                 $and: [
                     {
                         $or: [
-                            { deletedFor: { $elemMatch: { $ne: req.user._id } } },
+                            { deletedFor: { $nin: [req.user._id] } },
+                            // we can use this expression also works same as above ------ { deletedFor: { $elemMatch: { $ne: req.user._id } } },
                             { deletedFor: { $in: [null, []] } }
                         ]
                     },
@@ -25,7 +26,7 @@ const fetchallchatsCommon = async (req) => {
             .populate('users', '-password')
             .populate('latestMessage')
             .populate('groupAdmin', '-password')
-            .sort({ updatedAt:-1 })
+            .sort({ updatedAt: -1 })
 
         chats = await User.populate(chats, {
             path: "latestMessage.sender",

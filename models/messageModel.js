@@ -14,7 +14,10 @@ const messageSchema = new Schema({
         type:Schema.Types.ObjectId,
         ref:"chats"
     },
-    seenBy:[Schema.Types.ObjectId]
+    seenBy:[{
+        type: Schema.Types.ObjectId,
+        ref: "users"
+    }]
 },{timestamps:true})
 
 module.exports = mongoose.model('messages',messageSchema)

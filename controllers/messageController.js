@@ -6,9 +6,9 @@ const { fetchallchatsCommon } = require('../config/chatConfig')
 
 const sendMessage = async (req, res) => {
 
-    const { content, chatId } = req.body;
+    const { content, chatId, receiverIds } = req.body;
 
-    if (!content || !chatId) return BadRespose(res, false, "Invalid data send with the request!");
+    if (!content || !chatId || !receiverIds) return BadRespose(res, false, "Invalid data send with the request!");
 
     try {
         const newMessage = {
@@ -19,7 +19,28 @@ const sendMessage = async (req, res) => {
         }
         let message = await new Message(newMessage).save();
 
-        await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id, $set: { deletedFor: [] } })
+        let chat = await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id, $set: { deletedFor: [] } });
+
+        let unseenMsgCountObj = {}
+
+        if (!chat.unseenMsgsCountBy) {
+
+            receiverIds.forEach((id) => {
+                unseenMsgCountObj[id] = 1
+            })
+            unseenMsgCountObj[req.user._id] = 0
+
+        }
+        else {
+
+            unseenMsgCountObj = chat.unseenMsgsCountBy;
+
+            Object.keys(unseenMsgCountObj).forEach(k => {
+                unseenMsgCountObj[k] = unseenMsgCountObj[k] + 1
+            })
+        }
+
+        await Chat.findByIdAndUpdate(chatId, { unseenMsgsCountBy: unseenMsgCountObj })
 
         // message = await Message.find({_id:message._id}).populate('sender','-password').populate('chat')
 
@@ -39,6 +60,7 @@ const sendMessage = async (req, res) => {
         let chats = await fetchallchatsCommon(req)
 
         res.status(201).json({ status: true, message: "Message sent", fullmessage, chats })
+
     } catch (error) {
         errorRespose(res, false, error)
     }
@@ -65,13 +87,20 @@ const fetchallMessages = async (req, res) => {
 const updateMessageSeenBy = async (req, res) => {
     try {
 
-        const { msgId } = req.body;
+        const { chatId } = req.body;
 
-        const updatedMsg = await Message.findByIdAndUpdate(msgId, { $addToSet: { seenBy: req.user._id } }, { new: true });
+        const updatedMsg = await Message.updateMany({ chat: chatId }, { $addToSet: { seenBy: req.user._id } }, { new: true });
+
+        // unseenMsgsCountKeyToUpdate - user id of that unseenmsgscountBy object..!s
+        let unseenMsgsCountKeyToUpdate = `unseenMsgsCountBy.${req.user._id}` // key property of the user which seen all the messages 
+
+        let updated = await Chat.updateOne({ _id: chatId }, { $set: { [unseenMsgsCountKeyToUpdate]: 0 } }, { multi: true }) // updating unseen count of the user who seen all the messages or click the chat to view all the messages so we can update all the messages as he view all of them by clicking on that particular chat once
+
+        // console.log(updated, "..");
 
         if (!updatedMsg) return BadRespose(res, false, "Message unable to seen due to Network Error!")
 
-        let chats = await fetchallchatsCommon(req) // refreshed chats will refresed the chats in the frontend to show that he seen the lastemsg !  
+        let chats = await fetchallchatsCommon(req) // this newly updated chats will refreshed the chats in the frontend to show that he seen the laststmsg !  
 
         res.status(200).json({ status: true, chats });
 
@@ -81,4 +110,19 @@ const updateMessageSeenBy = async (req, res) => {
 
 }
 
-module.exports = { sendMessage, fetchallMessages, updateMessageSeenBy }
+// This route is for testing purpose...!
+const getUnseenmessageCountTesting = async (req, res) => {
+    const { chatId } = req.body;
+    const data = await Message.find({
+        chat: chatId,
+        $and: [
+            { sender: { $ne: req.user._id } },
+            { seenBy: { $nin: [req.user._id] } },
+        ]
+    }
+    ).count();
+
+    res.status(200).json({ unSeenMessages: data })
+}
+
+module.exports = { sendMessage, fetchallMessages, updateMessageSeenBy, getUnseenmessageCountTesting }

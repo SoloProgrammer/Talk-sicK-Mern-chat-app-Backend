@@ -47,6 +47,9 @@ const chatSchema = new Schema({
     totalMessages: {
         type: Number
     },
+    unseenMsgsCountBy:{
+        type:Object
+    },
     groupAdmin: [{
         type: Schema.Types.ObjectId,
         ref: "users"
