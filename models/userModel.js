@@ -30,7 +30,7 @@ const userSchama = new Schema({
     },
     about:{
         type:String,
-        default:"Hey my Talk-o-Meter is on now"
+        default:"Hey I'm Talk-Sick from now..!"
     }
 }, { timestamps: true });
 
