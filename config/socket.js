@@ -51,7 +51,7 @@ const connectToSocket = (server) => {
 
             socket.on("stop typing", (room) => socket.in(room).emit("stop typing"))
 
-            socket.on('new message', (newMessageRecieved, Previousmessages, user) => {
+            socket.on('new message', (newMessageRecieved, newMessages, user) => {
 
                 var chat = newMessageRecieved.chat
 
@@ -63,7 +63,7 @@ const connectToSocket = (server) => {
 
                     if (user._id == newMessageRecieved.sender._id) return
 
-                    socket.in(user._id).emit("message recieved", newMessageRecieved, Previousmessages, user)
+                    socket.in(user._id).emit("message recieved", newMessageRecieved, newMessages, user)
                 });
 
             })

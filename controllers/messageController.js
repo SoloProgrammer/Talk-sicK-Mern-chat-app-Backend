@@ -36,8 +36,8 @@ const sendMessage = async (req, res) => {
             unseenMsgCountObj = chat.unseenMsgsCountBy;
 
             Object.keys(unseenMsgCountObj).forEach(k => {
-                
-                if(k !== String(req.user._id)){
+
+                if (k !== String(req.user._id)) {
                     unseenMsgCountObj[k] = unseenMsgCountObj[k] + 1
                 }
                 else {
@@ -45,8 +45,6 @@ const sendMessage = async (req, res) => {
                 }
             })
         }
-
-        console.log(unseenMsgCountObj);
 
         await Chat.findByIdAndUpdate(chatId, { unseenMsgsCountBy: unseenMsgCountObj })
 
@@ -59,6 +57,10 @@ const sendMessage = async (req, res) => {
             select: "name avatar email phone about"
         });
 
+        let allMessages = await Message.find({
+            chat: chatId
+        }).populate('sender', '-password').populate('chat');
+
         // updating total messages inthe chat model of id chatId..................
         let totalmessages = (await Message.find({ chat: chatId })).length;
 
@@ -67,7 +69,7 @@ const sendMessage = async (req, res) => {
         // needs to refresh the chats to show the updated chat by latestmessage at the top in the frontend!
         let chats = await fetchallchatsCommon(req)
 
-        res.status(201).json({ status: true, message: "Message sent", fullmessage, chats })
+        res.status(201).json({ status: true, message: "Message sent", fullmessage, allMessages, chats })
 
     } catch (error) {
         errorRespose(res, false, error)
@@ -97,14 +99,16 @@ const updateMessageSeenBy = async (req, res) => {
 
         const { chatId } = req.body;
 
+        // console.log(chatId);
+
         const updatedMsg = await Message.updateMany({ chat: chatId }, { $addToSet: { seenBy: req.user._id } }, { new: true });
 
         // unseenMsgsCountKeyToUpdate - user id of that unseenmsgscountBy object..!s
         let unseenMsgsCountKeyToUpdate = `unseenMsgsCountBy.${req.user._id}` // key property of the user which seen all the messages 
 
-        let updated = await Chat.updateOne({ _id: chatId }, { $set: { [unseenMsgsCountKeyToUpdate]: 0 } }, { multi: true }) // updating unseen count of the user who seen all the messages or click the chat to view all the messages so we can update all the messages as he view all of them by clicking on that particular chat once
+        let updateStatus = await Chat.updateOne({ _id: chatId }, { $set: { [unseenMsgsCountKeyToUpdate]: 0 } }, { multi: true }) // updating unseen count of the user who seen all the messages or click the chat to view all the messages so we can update all the messages as he view all of them by clicking on that particular chat once
 
-        // console.log(updated, "..");
+        console.log(updateStatus, "..");
 
         if (!updatedMsg) return BadRespose(res, false, "Message unable to seen due to Network Error!")
 
