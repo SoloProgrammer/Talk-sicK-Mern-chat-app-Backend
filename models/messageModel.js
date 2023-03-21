@@ -17,7 +17,10 @@ const messageSchema = new Schema({
     seenBy:[{
         type: Schema.Types.ObjectId,
         ref: "users"
-    }]
+    }],
+    msgType:{
+        type:String
+    }
 },{timestamps:true})
 
 module.exports = mongoose.model('messages',messageSchema)

@@ -112,9 +112,13 @@ const updateMessageSeenBy = async (req, res) => {
 
         if (!updatedMsg) return BadRespose(res, false, "Message unable to seen due to Network Error!")
 
-        let chats = await fetchallchatsCommon(req) // this newly updated chats will refreshed the chats in the frontend to show that he seen the laststmsg !  
+        let chats = await fetchallchatsCommon(req) // this newly updated chats will refreshed the chats in the frontend to show that he seen the laststmsg ! 
 
-        res.status(200).json({ status: true, chats });
+        let messages = await Message.find({
+            chat: chatId
+        }).populate('sender', '-password').populate('chat');
+
+        res.status(200).json({ status: true, chats, messages });
 
     } catch (error) {
         return errorRespose(res, false, error)
