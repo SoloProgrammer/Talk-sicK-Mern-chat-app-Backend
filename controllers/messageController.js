@@ -122,6 +122,7 @@ const updateMessageSeenBy = async (req, res) => {
 
 }
 
+
 // This route is for testing purpose...!
 const getUnseenmessageCountTesting = async (req, res) => {
     const { chatId } = req.body;
