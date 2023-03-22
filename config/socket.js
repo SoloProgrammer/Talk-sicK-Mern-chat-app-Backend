@@ -68,14 +68,15 @@ const connectToSocket = (server) => {
 
             })
 
-            socket.on('seeing messages', (messages, chatUsers, user, room) => {
+            socket.on('seeing messages', (messages, chatUsers, userId, room) => {
 
+                
                 if (!chatUsers || chatUsers.length < 1) console.log("chat users are blank");
-
+                
                 if (!messages || messages.length < 1) console.log("messages are blank");
-
+                
                 chatUsers.forEach(u => {
-                    if (u._id !== user._id) {
+                    if (userId === u._id) {
                         socket.in(room).emit('seen messages', messages, room)
                     }
                 })
