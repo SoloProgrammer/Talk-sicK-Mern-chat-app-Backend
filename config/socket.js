@@ -1,6 +1,4 @@
-const port = process.env.PORT || 8001
 require('dotenv').config()
-
 
 const connectToSocket = (server) => {
 
@@ -10,7 +8,7 @@ const connectToSocket = (server) => {
             origin: process.env.CLIENT || "http://localhost:3000",
             methods: ["GET", "POST", "PUT", "DELETE"]
         }
-    })
+    });
 
     let activeUsers = []
     try {
@@ -68,18 +66,11 @@ const connectToSocket = (server) => {
 
             })
 
-            socket.on('seeing messages', (messages, chatUsers, userId, room) => {
+            socket.on('seeing messages', (messages, room) => {
 
-                
-                if (!chatUsers || chatUsers.length < 1) console.log("chat users are blank");
-                
                 if (!messages || messages.length < 1) console.log("messages are blank");
-                
-                chatUsers.forEach(u => {
-                    if (userId === u._id) {
-                        socket.in(room).emit('seen messages', messages, room)
-                    }
-                })
+
+                socket.in(room).emit('seen messages', messages, room)
             })
 
         })

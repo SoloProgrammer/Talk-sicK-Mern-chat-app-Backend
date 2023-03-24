@@ -46,6 +46,7 @@ const fetchallchatsCommon = async (req) => {
         if (!chats) return BadRespose(res, false, "Some Error occured please try again later")
 
         return chats
+        
     } catch (error) {
         return errorRespose(res, false, { message: "Failed to load chats from server, Network issue!" })
     }
