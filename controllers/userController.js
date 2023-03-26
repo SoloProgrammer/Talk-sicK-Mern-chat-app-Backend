@@ -37,7 +37,7 @@ const updateUser = async (req,res) => {
 
         if (!updatedUser) return BadRespose(res, false, "Some Error while updating..!");
 
-        res.status(200).json({ status: true, updatedUser, message: "Profile Updated Sucessfully 🎉" })
+        res.status(200).json({ status: true, updatedUser, message: "Profile Updated Sucessfully" })
 
     } catch (error) {
         return errorRespose(res, false, error)
@@ -58,7 +58,7 @@ const authUser = async (req, res) => {
 
         if (user && (await user.comparePassword(password))) {
             const token = genToken(user.id)
-            res.status(200).json({ status: true, token, message: "Login Sucessful..!" })
+            res.status(200).json({ status: true, token, message: `LoggedIn to Talk-sicK Successful..🎉` })
         }
         else {
             res.status(400).json({ status, message: "Invalid email or password" })

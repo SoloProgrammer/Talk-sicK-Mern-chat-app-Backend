@@ -5,7 +5,7 @@ const bcyrpt = require('bcryptjs')
 
 const userSchama = new Schema({
     avatar: {
-        default: "",
+        default: "https://res.cloudinary.com/dvzjzf36i/image/upload/v1679814483/wxrvucwq93ovrswfpsk3.png",
         type: String,
     },
     name: {
