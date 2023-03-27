@@ -35,10 +35,10 @@ const sendMessage = async (req, res) => {
 
             unseenMsgCountObj = chat.unseenMsgsCountBy;
 
-            Object.keys(unseenMsgCountObj).forEach(k => {
+            Object.keys(unseenMsgCountObj).forEach(k => { // k key := userId as the key!
 
                 if (k !== String(req.user._id)) {
-                    unseenMsgCountObj[k] = unseenMsgCountObj[k] + 1
+                    unseenMsgCountObj[k] += 1
                 }
                 else {
                     unseenMsgCountObj[k] = 0
@@ -62,7 +62,7 @@ const sendMessage = async (req, res) => {
         }).populate('sender', '-password').populate('chat');
 
         // updating total messages inthe chat model of id chatId..................
-        let totalmessages = (await Message.find({ chat: chatId })).length;
+        let totalmessages = allMessages.length;
 
         await Chat.findByIdAndUpdate(chatId, { totalMessages: totalmessages })
 
