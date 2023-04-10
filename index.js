@@ -15,12 +15,15 @@ connetToMongo()
 
 const port = process.env.PORT || 8001
 
-const app = express()
-app.use(cors())
+const app = express();
+
+// CORS configuration.........
+const Allowed_Origins = process.env.ALLOWED_ORIGINS.split(', ');
+app.use(cors({ origin: Allowed_Origins }))
 
 app.use(express.json())
 
-app.get('/', (req, res) => res.send('Server is running........'))
+app.get('/', (req, res) => res.send(`Server is running........ on PORT ${port}`))
 
 app.use('/api/user', userRoutes)
 app.use('/api/chat', chatRoutes)

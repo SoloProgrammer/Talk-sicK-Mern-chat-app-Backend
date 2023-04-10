@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 require('dotenv').config()
-const colors = require("colors");
+require("colors");
 
 const connetToMongo = () =>{
     console.log('Connection is started...'.yellow.bold);

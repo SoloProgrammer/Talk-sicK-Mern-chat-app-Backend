@@ -5,7 +5,7 @@ const connectToSocket = (server) => {
     const io = require('socket.io')(server, {
         pingTimeout: 120000,
         cors: {
-            origin: process.env.CLIENT || "http://localhost:3000",
+            origin: process.env.ALLOWED_ORIGINS.split(', '),
             methods: ["GET", "POST", "PUT", "DELETE"]
         }
     });
@@ -63,7 +63,6 @@ const connectToSocket = (server) => {
 
                     socket.in(user._id).emit("message recieved", newMessageRecieved, newMessages, user)
                 });
-
             })
 
             socket.on('seeing messages', (messages, room) => {
