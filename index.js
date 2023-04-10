@@ -19,7 +19,9 @@ const app = express();
 
 // CORS configuration.........
 const Allowed_Origins = process.env.ALLOWED_ORIGINS.split(', ');
-app.use(cors({ origin: Allowed_Origins }))
+app.use(cors({ origin: Allowed_Origins }));
+
+console.log(Allowed_Origins,"..........---------");
 
 app.use(express.json())
 
