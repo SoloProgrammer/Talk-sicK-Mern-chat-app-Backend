@@ -37,7 +37,7 @@ const fetchallchatsCommon = async (req) => {
 
         // OR
 
-        // populating the chat in the lastetMessage of user to inplement the notification logic in frontend at the first load if chats !
+        // populating the chat in the lastetMessage of user to show notiffications details as the notification is a unseemnMessage itself so need to show the details of that uneen message in the notification menu in frontend at the first load if chats!
 
         chats = await Chat.populate(chats, {
             path: "latestMessage.chat"
@@ -46,10 +46,26 @@ const fetchallchatsCommon = async (req) => {
         if (!chats) return BadRespose(res, false, "Some Error occured please try again later")
 
         return chats
-        
+
     } catch (error) {
         return errorRespose(res, false, { message: "Failed to load chats from server, Network issue!" })
     }
 }
 
-module.exports = { fetchallchatsCommon }
+const Getfullchat = async (chatId) => {
+    let chat = await Chat.find({ _id: chatId })
+        .populate('users', '-password')
+        .populate('groupAdmin', '-password')
+        .populate('latestMessage');
+
+    chat = await User.populate(chat, {
+        path: 'latestMessage.sender',
+        select: 'name email avatar phone'
+    })
+
+    if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
+
+    return chat;
+}
+
+module.exports = { fetchallchatsCommon, Getfullchat }

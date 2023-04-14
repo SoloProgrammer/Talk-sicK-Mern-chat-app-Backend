@@ -2,23 +2,8 @@ const Chat = require('../models/chatModel')
 const User = require('../models/userModel')
 const Message = require('../models/messageModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
-const { fetchallchatsCommon } = require('../config/chatConfig')
+const { fetchallchatsCommon, Getfullchat } = require('../config/chatConfig')
 
-const Getfullchat = async (chatId) => {
-    let chat = await Chat.find({ _id: chatId })
-        .populate('users', '-password')
-        .populate('groupAdmin', '-password')
-        .populate('latestMessage');
-
-    chat = await User.populate(chat, {
-        path: 'latestMessage.sender',
-        select: 'name email avatar phone'
-    })
-
-    if (chat.length < 1) return BadRespose(res, false, "Some error occured try again!")
-
-    return chat;
-}
 const accesschat = async (req, res) => {
     const { userId } = req.body;
     if (!userId) return BadRespose(res, false, "UserId param not send with the request")
@@ -289,7 +274,7 @@ const addTogroup = async (req, res) => {
 
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: `New ${ users.length > 1 ? "members" : "member"} added to Group`, chat: chat[0], chats })
+        return res.status(200).json({ status: true, message: `New ${users.length > 1 ? "members" : "member"} added to Group`, chat: chat[0], chats })
 
     } catch (error) {
         return errorRespose(res, status, error)
