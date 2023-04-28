@@ -271,7 +271,32 @@ const addTogroup = async (req, res) => {
 
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(200).json({ status: true, message: `New ${users.length > 1 ? "members" : "member"} added to Group`, chat: chat[0], chats })
+        res.status(200).json({ status: true, message: `New ${users.length > 1 ? "members" : "member"} added to Group`, chat: chat[0], chats })
+
+        let unseenMsgCountObj = {};
+
+        users.forEach(async (userId, i) => {
+            const count = await Message.find({
+                chat: chatId,
+                $and: [
+                    { sender: { $ne: userId } },
+                    { seenBy: { $nin: [userId] } },
+                ]
+            }
+            ).count();
+
+            //  The below lines of code will be executed after Each DB call to get the unseenMsgCount of each user that want to be added in the group!
+
+            unseenMsgCountObj[userId] = count
+
+            // Only update the chat when for loop reaches the end! 
+            if (i === users.length - 1) {
+                unseenMsgCountObj = { ...chat[0].unseenMsgsCountBy, ...unseenMsgCountObj };
+                updatedChat = await Chat.findByIdAndUpdate(chatId, { unseenMsgsCountBy: unseenMsgCountObj },{new:true})
+                // console.log(updatedChat)
+            }
+        });
+
 
     } catch (error) {
         return errorRespose(res, status, error)
