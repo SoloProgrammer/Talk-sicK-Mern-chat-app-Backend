@@ -26,6 +26,7 @@ const accesschat = async (req, res) => {
 
         let status = true
 
+        let chats = await fetchallchatsCommon(req);
         if (isChat.length < 1) {
             let newChat = {
                 chatName: 'personalChat',
@@ -38,15 +39,12 @@ const accesschat = async (req, res) => {
 
                 let fullCreatedChat = await Getfullchat(createdChat._id);
 
-                let chats = await fetchallchatsCommon(req);
-
                 res.status(201).json({ status, message: "Chat has been created Successfully", chat: fullCreatedChat[0], chats })
             } catch (error) {
                 return errorRespose(res, false, error)
             }
         }
         else {
-            let chats = await fetchallchatsCommon(req);
             res.status(201).json({ status, message: "Chat has been created Successfully", chat: isChat[0], chats })
         }
     } catch (error) {
@@ -176,11 +174,10 @@ const creategroup = async (req, res) => {
 
     if (groupAvatar) groupdata.groupAvatar = groupAvatar
 
-
     try {
         let newGroup = await Chat.create(groupdata)
 
-        let Fullgroup = await Chat.find({ _id: newGroup.id })
+        let Fullgroup = await Chat.find({ _id: newGroup._id })
             .populate('users', '-password')
             .populate('latestMessage')
             .populate('groupAdmin', '-password')

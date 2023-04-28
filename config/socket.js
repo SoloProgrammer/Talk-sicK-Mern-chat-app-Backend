@@ -1,4 +1,5 @@
 require('dotenv').config()
+require("colors");
 
 const connectToSocket = (server) => {
 
@@ -13,7 +14,7 @@ const connectToSocket = (server) => {
     let activeUsers = []
     try {
         io.on("connection", (socket) => {
-            console.log("connected to socket.io");
+            console.log("connected to socket.io".bgCyan.underline);
             socket.on('setup', (userData) => {
                 socket.join(userData._id);
                 socket.emit("connected");
