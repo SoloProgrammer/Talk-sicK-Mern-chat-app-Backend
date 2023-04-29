@@ -27,6 +27,7 @@ const accesschat = async (req, res) => {
         let status = true
 
         let chats = await fetchallchatsCommon(req);
+        
         if (isChat.length < 1) {
             let newChat = {
                 chatName: 'personalChat',
@@ -38,6 +39,8 @@ const accesschat = async (req, res) => {
                 let createdChat = await Chat.create(newChat);
 
                 let fullCreatedChat = await Getfullchat(createdChat._id);
+
+                chats = await fetchallchatsCommon(req);
 
                 res.status(201).json({ status, message: "Chat has been created Successfully", chat: fullCreatedChat[0], chats })
             } catch (error) {
@@ -292,7 +295,7 @@ const addTogroup = async (req, res) => {
             // Only update the chat when for loop reaches the end! 
             if (i === users.length - 1) {
                 unseenMsgCountObj = { ...chat[0].unseenMsgsCountBy, ...unseenMsgCountObj };
-                updatedChat = await Chat.findByIdAndUpdate(chatId, { unseenMsgsCountBy: unseenMsgCountObj },{new:true})
+                updatedChat = await Chat.findByIdAndUpdate(chatId, { unseenMsgsCountBy: unseenMsgCountObj }, { new: true })
                 // console.log(updatedChat)
             }
         });
