@@ -37,7 +37,7 @@ const fetchallchatsCommon = async (req) => {
 
         // OR
 
-        // populating the chat in the lastetMessage of user to show notiffications details as the notification is a unseemnMessage itself so need to show the details of that uneen message in the notification menu in frontend at the first load if chats!
+        // populating the chat in the lastetMessage of user to show notifications details as the notification is a unseemnMessage itself so need to show the details of that uneen message in the notification menu in frontend at the first load if chats!
 
         chats = await Chat.populate(chats, {
             path: "latestMessage.chat"
