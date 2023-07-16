@@ -6,7 +6,7 @@ const { fetchallchatsCommon } = require('../config/chatConfig')
 
 const sendMessage = async (req, res) => {
 
-    const { content, chatId, receiverIds } = req.body;
+    const { content, chatId, receiverIds, msgType } = req.body;
 
     if (!content || !chatId || !receiverIds) return BadRespose(res, false, "Invalid data send with the request!");
 
@@ -15,7 +15,8 @@ const sendMessage = async (req, res) => {
             content,
             sender: req.user._id,
             chat: chatId,
-            seenBy: [req.user._id]
+            seenBy: [req.user._id],
+            msgType
         }
         let message = await new Message(newMessage).save();
 
