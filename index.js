@@ -13,7 +13,7 @@ const messageRoutes = require('./routes/messageRoutes')
 
 connetToMongo()
 
-const port = process.env.PORT || 8001
+const PORT = process.env.PORT || 8001
 
 const app = express();
 
@@ -25,12 +25,12 @@ app.use(cors({ origin: Allowed_Origins }));
 
 app.use(express.json())
 
-app.get('/', (req, res) => res.send(`Server is running........ on PORT ${port}`))
+app.get('/', (req, res) => res.send(`Server is running........ on PORT ${PORT}`))
 
 app.use('/api/user', userRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/message', messageRoutes)
 
-const server = app.listen(port, () => console.log(`Talk-sicK Backend is running on server...${port} `))
+const server = app.listen(PORT, () => console.log(`Talk-sicK Backend is running on server...${PORT} `))
 
 connectToSocket(server)

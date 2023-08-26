@@ -78,15 +78,17 @@ const sendMessage = async (req, res) => {
 }
 const fetchallMessages = async (req, res) => {
 
-    const chatId = req.params.chatId;
-
+    const { chatId } = req.params;
+    const { skip, limit } = req.query
+    
     if (!chatId) return BadRespose(res, false, "chatId param not send with the request!")
 
     try {
 
-        let allMessages = await Message.find({
-            chat: chatId
-        }).populate('sender', '-password').populate('chat');
+        const allMessages = await Message.find({ chat: chatId })
+            .skip(skip).limit(limit)
+            .populate('sender', '-password')
+            .populate('chat');
 
         res.status(200).json({ status: true, allMessages })
 
@@ -127,7 +129,24 @@ const updateMessageSeenBy = async (req, res) => {
 
 }
 
-// This controller is for testing purpose...!
+
+// The below two controllers are for testing purpose...!
+
+const deleteMessages = async (req, res) => {
+    const { chatId, msgType } = req.params;
+    try {
+        let updatedData;
+        if (msgType) {
+            updatedData = await Message.deleteMany({ chat: chatId, msgType }, { new: true })
+        }
+        else {
+            updatedData = await Message.deleteMany({ chat: chatId }, { new: true })
+        }
+        res.json({ status: true, msg: "Mesages deleted sucessfully", updatedData })
+    } catch (error) {
+
+    }
+}
 const getUnseenmessageCountTesting = async (req, res) => {
     const { chatId } = req.body;
     const data = await Message.find({
@@ -142,4 +161,4 @@ const getUnseenmessageCountTesting = async (req, res) => {
     res.status(200).json({ unSeenMessages: data })
 }
 
-module.exports = { sendMessage, fetchallMessages, updateMessageSeenBy, getUnseenmessageCountTesting }
+module.exports = { sendMessage, fetchallMessages, updateMessageSeenBy, deleteMessages, getUnseenmessageCountTesting }

@@ -1,13 +1,14 @@
 require('dotenv').config()
 require("colors");
+const Socket = require('socket.io')
 
 const connectToSocket = (server) => {
 
-    const io = require('socket.io')(server, {
+    const io = Socket(server, {
         pingTimeout: 120000,
         cors: {
             origin: process.env.ALLOWED_ORIGINS.split(', '),
-            methods: ["GET", "POST", "PUT", "DELETE"]
+            methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
         }
     });
 
@@ -50,7 +51,7 @@ const connectToSocket = (server) => {
 
             socket.on("stop typing", (room) => socket.in(room).emit("stop typing"))
 
-            socket.on('new message', (newMessageRecieved, newMessages) => {
+            socket.on('new message', (newMessageRecieved) => {
 
                 var chat = newMessageRecieved.chat
 
@@ -62,15 +63,14 @@ const connectToSocket = (server) => {
 
                     if (user._id === newMessageRecieved.sender._id) return
 
-                    socket.in(user._id).emit("message recieved", newMessageRecieved, newMessages, user)
+                    socket.in(user._id).emit("message recieved", newMessageRecieved, user)
                 });
             })
 
-            socket.on('seeing messages', (messages, room) => {
+            socket.on('seeing messages', (room, totalMessages) => {
 
-                if (!messages || messages.length < 1) console.log("messages are blank");
-
-                socket.in(room).emit('seen messages', messages, room)
+                if(!room) console.error("Room id not provided")
+                socket.in(room).emit('seen messages', room, totalMessages)
             })
 
         })
