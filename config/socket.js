@@ -47,9 +47,9 @@ const connectToSocket = (server) => {
 
             //2. taking room from the client because after emmiting typing in the client side then will display typing indicator only in that chatroom which is selected as it looks obvious that it will emit it only in the chatroom which all users are in but When itested it causes me some bugs i.e the typing indicator is showing in the prevously join room and the current join room as well so that's the reason to send the room return to the user who will see typing indicator when other user types in the same chat room, it's to explanable but I tried my best to explain in the short!
 
-            socket.on("typing", (room, user) => socket.in(room).emit("typing", user, room))
+            socket.on("typing", (room, user) => io.emit("typing", user, room))
 
-            socket.on("stop typing", (room) => socket.in(room).emit("stop typing"))
+            socket.on("stop typing", (room) => io.emit("stop typing"))
 
             socket.on('new message', (newMessageRecieved) => {
 
@@ -67,10 +67,10 @@ const connectToSocket = (server) => {
                 });
             })
 
-            socket.on('seeing messages', (room, totalMessages) => {
+            socket.on('seeing messages', (room, totalMessages, updatedChat) => {
 
                 if(!room) console.error("Room id not provided")
-                socket.in(room).emit('seen messages', room, totalMessages)
+                socket.in(room).emit('seen messages', room, totalMessages, updatedChat)
             })
 
         })
