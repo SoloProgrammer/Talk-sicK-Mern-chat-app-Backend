@@ -13,6 +13,8 @@ const connectToSocket = (server) => {
     });
 
     let activeUsers = []
+
+    let typingInfo = []
     try {
         io.on("connection", (socket) => {
             console.log("connected to socket.io".bgCyan.underline);
@@ -47,9 +49,28 @@ const connectToSocket = (server) => {
 
             //2. taking room from the client because after emmiting typing in the client side then will display typing indicator only in that chatroom which is selected as it looks obvious that it will emit it only in the chatroom which all users are in but When itested it causes me some bugs i.e the typing indicator is showing in the prevously join room and the current join room as well so that's the reason to send the room return to the user who will see typing indicator when other user types in the same chat room, it's to explanable but I tried my best to explain in the short!
 
-            socket.on("typing", (room, user) => io.emit("typing", user, room))
+            socket.on("typing", (room, user) => {
+                const { name, _id } = user
+                user = { name, _id }
+                if (typingInfo.length) {
+                    if (!typingInfo.map(tyI => tyI.chatId).includes(room) || !typingInfo.map(tyI => tyI.user?._id).includes(user._id)) {
+                        typingInfo.push({ user, chatId: room })
+                    }
+                } else typingInfo.push({ user, chatId: room })
 
-            socket.on("stop typing", (room) => io.emit("stop typing"))
+                io.emit("typing", user, typingInfo)
+            })
+
+            socket.on("stop typing", (room, user) => {
+                // console.log("before typinfInfo", typingInfo);
+
+                typingInfo = typingInfo.filter(tyI => {
+                    if ((tyI.chatId !== room && tyI.user._id !== user._id) || (tyI.chatId === room && tyI.user._id !== user._id)) return tyI
+                })
+                io.emit("stop typing", typingInfo)
+                // console.log("after typinfInfo", typingInfo);
+
+            })
 
             socket.on('new message', (newMessageRecieved) => {
 
@@ -69,7 +90,7 @@ const connectToSocket = (server) => {
 
             socket.on('seeing messages', (room, totalMessages, updatedChat) => {
 
-                if(!room) console.error("Room id not provided")
+                if (!room) console.error("Room id not provided")
                 socket.in(room).emit('seen messages', room, totalMessages, updatedChat)
             })
 
