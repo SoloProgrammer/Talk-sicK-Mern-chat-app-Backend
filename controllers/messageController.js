@@ -80,7 +80,7 @@ const fetchallMessages = async (req, res) => {
 
     const { chatId } = req.params;
     const { skip, limit } = req.query
-    
+
     if (!chatId) return BadRespose(res, false, "chatId param not send with the request!")
 
     try {
@@ -107,7 +107,7 @@ const updateMessageSeenBy = async (req, res) => {
         const updatedMsg = await Message.updateMany({ chat: chatId }, { $addToSet: { seenBy: req.user._id } }, { new: true });
 
         // unseenMsgsCountKeyToUpdate - user id of that unseenmsgscountBy object..!s
-        let unseenMsgsCountKeyToUpdate = `unseenMsgsCountBy.${req.user._id}` // key property of the user which seen all the messages 
+        let unseenMsgsCountKeyToUpdate = `unseenMsgsCountBy.${req.user._id}` // key - property of the user which seen all the messages 
 
         let updateStatus = await Chat.updateOne({ _id: chatId }, { $set: { [unseenMsgsCountKeyToUpdate]: 0 } }, { multi: true }) // updating unseen count of the user who seen all the messages or click the chat to view all the messages so we can update all the messages as he view all of them by clicking on that particular chat once
 
@@ -128,7 +128,22 @@ const updateMessageSeenBy = async (req, res) => {
     }
 
 }
+const deleteMessage = async (req, res) => {
+    try {
+        let deletedObj = {
+            value: true,
+            for: req.query.for
+        }
+        let msg = await Message.updateOne({ _id: req.params.id }, { $set: { deleted: deletedObj } }, { new: true })
 
+        msg = await Message.findById(req.params.id).populate('sender', '-password').populate('chat')
+
+        res.json({ msg })
+
+    } catch (error) {
+        return errorRespose(res, false, error)
+    }
+}
 
 // The below two controllers are for testing purpose...!
 
@@ -161,4 +176,4 @@ const getUnseenmessageCountTesting = async (req, res) => {
     res.status(200).json({ unSeenMessages: data })
 }
 
-module.exports = { sendMessage, fetchallMessages, updateMessageSeenBy, deleteMessages, getUnseenmessageCountTesting }
+module.exports = { sendMessage, fetchallMessages, updateMessageSeenBy, deleteMessage, deleteMessages, getUnseenmessageCountTesting }

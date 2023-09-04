@@ -2,25 +2,34 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema;
 
 const messageSchema = new Schema({
-    sender:{
-        type:Schema.Types.ObjectId,
-        require:true,
-        ref:'users'
+    sender: {
+        type: Schema.Types.ObjectId,
+        require: true,
+        ref: 'users'
     },
-    content:{
-       type:Object
+    content: {
+        type: Object,
+        require:true
     },
-    chat:{
-        type:Schema.Types.ObjectId,
-        ref:"chats"
+    chat: {
+        type: Schema.Types.ObjectId,
+        ref: "chats"
     },
-    seenBy:[{
+    seenBy: [{
         type: Schema.Types.ObjectId,
         ref: "users"
     }],
-    msgType:{
-        type:String
+    deleted: {
+        value: { type: Boolean, default: false },
+        for: {
+            type: String,
+            enum: ['everyone', 'myself']
+        }
+    },
+    msgType: {
+        type: String,
+        enum: ['regular', 'info']
     }
-},{timestamps:true})
+}, { timestamps: true })
 
-module.exports = mongoose.model('messages',messageSchema)
+module.exports = mongoose.model('messages', messageSchema)
