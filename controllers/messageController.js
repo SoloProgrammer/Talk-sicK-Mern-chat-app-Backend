@@ -60,7 +60,7 @@ const sendMessage = async (req, res) => {
 
         let allMessages = await Message.find({
             chat: chatId
-        }).populate('sender', '-password').populate('chat');
+        }).populate('sender', '-password').populate('chat').populate('reactions.user');
 
         // updating total messages inthe chat model of id chatId..................
         let totalmessages = allMessages.length;
@@ -88,7 +88,8 @@ const fetchallMessages = async (req, res) => {
         const allMessages = await Message.find({ chat: chatId })
             .skip(skip).limit(limit)
             .populate('sender', '-password')
-            .populate('chat');
+            .populate('chat')
+            .populate('reactions.user')
 
         res.status(200).json({ status: true, allMessages })
 
@@ -119,7 +120,7 @@ const updateMessageSeenBy = async (req, res) => {
 
         let messages = await Message.find({
             chat: chatId
-        }).populate('sender', '-password').populate('chat');
+        }).populate('sender', '-password').populate('chat').populate('reactions.user');
 
         res.status(200).json({ status: true, chats, messages });
 
@@ -138,12 +139,52 @@ const deleteMessage = async (req, res) => {
 
         msg = await Message.findById(req.params.id).populate('sender', '-password').populate('chat')
 
+        msg = await User.populate(msg, {
+            path: 'reactions.user',
+            select: '-password'
+        })
+
         res.json({ msg })
 
     } catch (error) {
         return errorRespose(res, false, error)
     }
 }
+const reactMessage = async (req, res) => {
+    try {
+        let { id } = req.params
+        let { reaction } = req.query
+
+        let msg = await Message.findById(id)
+
+        const newReaction = {
+            user: req.user._id,
+            reaction
+        }
+        if ((msg.reactions.map(rec => String(rec.user)).includes(String(req.user._id))
+            &&
+            msg.reactions.filter(rec => String(rec.user) === String(req.user._id))[0].reaction === reaction)) {
+            msg = await Message.findByIdAndUpdate(id, { $pull: { reactions: { user: req.user._id } } }, { new: true })
+        }
+        else {
+            await Message.updateOne({ _id: id }, { $pull: { reactions: { user: req.user._id } } })
+            msg = await Message.findByIdAndUpdate(id, { $push: { reactions: newReaction } }, { new: true })
+        }
+
+        msg = await Message.findById(req.params.id).populate('sender', '-password').populate('chat')
+
+        msg = await User.populate(msg, {
+            path: 'reactions.user',
+            select: '-password'
+        })
+
+        res.json({ status: true, msg, reacted_user: req.user._id })
+
+    } catch (error) {
+        errorRespose(res, false, error)
+    }
+}
+
 
 // The below two controllers are for testing purpose...!
 
@@ -176,4 +217,12 @@ const getUnseenmessageCountTesting = async (req, res) => {
     res.status(200).json({ unSeenMessages: data })
 }
 
-module.exports = { sendMessage, fetchallMessages, updateMessageSeenBy, deleteMessage, deleteMessages, getUnseenmessageCountTesting }
+module.exports = {
+    sendMessage,
+    fetchallMessages,
+    updateMessageSeenBy,
+    deleteMessage,
+    reactMessage,
+    deleteMessages,
+    getUnseenmessageCountTesting
+}

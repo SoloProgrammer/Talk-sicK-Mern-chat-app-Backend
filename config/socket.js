@@ -94,6 +94,14 @@ const connectToSocket = (server) => {
                 socket.in(room).emit('seen messages', room, totalMessages, updatedChat)
             })
 
+            socket.on('delete message', (deletedMsg) => {
+                io.emit('deleted message', deletedMsg)
+            })
+            
+            socket.on('react message', (reactedMsg, reacted_user) => {
+                io.emit('react message', reactedMsg, reacted_user)
+            })
+
         })
     } catch (error) {
         console.log("Some error occured while connecting with the socket.io ERROR: ", error)

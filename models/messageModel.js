@@ -9,7 +9,7 @@ const messageSchema = new Schema({
     },
     content: {
         type: Object,
-        require:true
+        require: true
     },
     chat: {
         type: Schema.Types.ObjectId,
@@ -29,7 +29,16 @@ const messageSchema = new Schema({
     msgType: {
         type: String,
         enum: ['regular', 'info']
-    }
+    },
+    reactions: [{
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'users'
+        },
+        reaction: {
+            type: 'String'
+        }
+    }]
 }, { timestamps: true })
 
 module.exports = mongoose.model('messages', messageSchema)
