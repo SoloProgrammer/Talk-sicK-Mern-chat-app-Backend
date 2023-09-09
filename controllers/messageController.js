@@ -178,7 +178,7 @@ const reactMessage = async (req, res) => {
             select: '-password'
         })
 
-        res.json({ status: true, msg, reacted_user: req.user._id })
+        res.json({ status: true, msg })
 
     } catch (error) {
         errorRespose(res, false, error)
