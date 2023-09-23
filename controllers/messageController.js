@@ -4,6 +4,11 @@ const User = require('../models/userModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
 const { fetchallchatsCommon } = require('../config/chatConfig')
 
+
+const prepareNewMessageObj = (content, sender, chat, seenBy, msgType) => {
+    return { content, sender, chat, seenBy, msgType }
+}
+
 const sendMessage = async (req, res) => {
 
     const { content, chatId, receiverIds, msgType } = req.body;
@@ -11,13 +16,8 @@ const sendMessage = async (req, res) => {
     if (!content || !chatId || !receiverIds) return BadRespose(res, false, "Invalid data send with the request!");
 
     try {
-        const newMessage = {
-            content,
-            sender: req.user._id,
-            chat: chatId,
-            seenBy: [req.user._id],
-            msgType
-        }
+        const newMessage = prepareNewMessageObj(content, req.user._id, chatId, [req.user._id], msgType)
+
         let message = await new Message(newMessage).save();
 
         let chat = await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id, $set: { deletedFor: [] } });
@@ -94,7 +94,7 @@ const fetchallMessages = async (req, res) => {
         res.status(200).json({ status: true, allMessages })
 
     } catch (error) {
-        return errorRespose(res, false, { message: "Failed to load chats,Network unstable!" })
+        return errorRespose(res, false, { message: "Failed to load messages, Network unstable!" })
     }
 
 }
@@ -150,6 +150,13 @@ const deleteMessage = async (req, res) => {
         return errorRespose(res, false, error)
     }
 }
+const deleteReactionMessages = async (chatId) => {
+    try {
+        await Message.deleteMany({ chat: chatId, msgType: 'reaction' })
+    } catch (error) {
+        console.log("Error in delateAllReactMessages - ", error.message);
+    }
+}
 const reactMessage = async (req, res) => {
     try {
         let { id } = req.params
@@ -161,17 +168,54 @@ const reactMessage = async (req, res) => {
             user: req.user._id,
             reaction
         }
+
+        let lastMsg, msgs;
+        msgs = await Message.find({ chat: msg.chat })
+        lastMsg = msgs[msgs.length - 1]
+
+        function isUserReactionMessage(msg) {
+            return msg.msgType === 'reaction' && String(msg.sender) === String(req.user._id)
+        }
+        // Deleting all the reaction message before adding new ones this is because as we are only showing the last reacted message in the latestmessage of the chat---
+        isUserReactionMessage(lastMsg) && deleteReactionMessages(msg.chat)
+
         if ((msg.reactions.map(rec => String(rec.user)).includes(String(req.user._id))
             &&
             msg.reactions.filter(rec => String(rec.user) === String(req.user._id))[0].reaction === reaction)) {
+
             msg = await Message.findByIdAndUpdate(id, { $pull: { reactions: { user: req.user._id } } }, { new: true })
+
+            // here we are chking if the last reaction message is of the same user who is removing reaction from the message if not then it is the case when user is trying to remove reaction from any of his previous message--- which is why we don't need to update the lastetmenssage with the very last message of the chat as it is of different user! 
+            if (!isUserReactionMessage(lastMsg)) return
+
+            // Here we are removing the reaction so we also have to remove reaction message as the latestmessage of the chat and put the very last message as the latestmessage---
+            msgs = await Message.find({ chat: msg.chat })
+            lastMsg = msgs[msgs.length - 1]
+            await Chat.updateOne({ _id: lastMsg.chat }, { latestMessage: lastMsg._id })
         }
         else {
             await Message.updateOne({ _id: id }, { $pull: { reactions: { user: req.user._id } } })
             msg = await Message.findByIdAndUpdate(id, { $push: { reactions: newReaction } }, { new: true })
+
+            // Below code is to create newMessage that show (reaction to message) for eg- (reacted 🤣 to xyz..message) and update the latestmessage with this newly created reaction message---- 
+            // and here any how we have to delete the previous reaction message and add the new one as the latestMessage of the chat
+            await deleteReactionMessages(msg.chat)
+
+            let content = {};
+            if (msg?.content?.message) {
+                content.message = `reacted ${reaction} to ${msg.content.message}`
+            }
+            else if (msg?.content.img) {
+                content.message = `reacted ${reaction} to image`
+            }
+
+            const newMessage = prepareNewMessageObj(content, req.user._id, msg.chat, [req.user._id], 'reaction')
+            let newMsg = await new Message(newMessage).save()
+            console.log(newMsg);
+            await Chat.updateOne({ _id: newMsg.chat }, { latestMessage: newMsg._id })
         }
 
-        msg = await Message.findById(req.params.id).populate('sender', '-password').populate('chat')
+        msg = await Message.findById(id).populate('sender', '-password').populate('chat')
 
         msg = await User.populate(msg, {
             path: 'reactions.user',
@@ -181,10 +225,10 @@ const reactMessage = async (req, res) => {
         res.json({ status: true, msg })
 
     } catch (error) {
+        console.log(error);
         errorRespose(res, false, error)
     }
 }
-
 
 // The below two controllers are for testing purpose...!
 

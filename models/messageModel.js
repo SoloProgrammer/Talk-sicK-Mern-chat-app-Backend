@@ -28,7 +28,7 @@ const messageSchema = new Schema({
     },
     msgType: {
         type: String,
-        enum: ['regular', 'info']
+        enum: ['regular', 'info', 'reaction']
     },
     reactions: [{
         user: {
