@@ -203,10 +203,10 @@ const reactMessage = async (req, res) => {
 
             let content = {};
             if (msg?.content?.message) {
-                content.message = `reacted ${reaction} to ${msg.content.message}`
+                content.message = `Reacted ${reaction} to ${msg.content.message}`
             }
             else if (msg?.content.img) {
-                content.message = `reacted ${reaction} to image`
+                content.message = `Reacted ${reaction} to image`
             }
 
             const newMessage = prepareNewMessageObj(content, req.user._id, msg.chat, [req.user._id], 'reaction')
