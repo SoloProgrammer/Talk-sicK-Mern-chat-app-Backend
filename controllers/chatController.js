@@ -2,7 +2,8 @@ const Chat = require('../models/chatModel')
 const User = require('../models/userModel')
 const Message = require('../models/messageModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
-const { fetchallchatsCommon, Getfullchat } = require('../config/chatConfig')
+const { fetchallchatsCommon, Getfullchat } = require('../config/chatConfig');
+const { saveMessage: saveInitialGroupMsg } = require('./messageController');
 
 const accesschat = async (req, res) => {
     const { userId } = req.body;
@@ -27,7 +28,7 @@ const accesschat = async (req, res) => {
         let status = true
 
         let chats = await fetchallchatsCommon(req);
-        
+
         if (isChat.length < 1) {
             let newChat = {
                 chatName: 'personalChat',
@@ -162,7 +163,7 @@ const fetchallchats = async (req, res) => {
 }
 const creategroup = async (req, res) => {
 
-    const { groupName, users, groupAvatar } = req.body;
+    const { groupName, users, groupAvatar, userNames } = req.body;
     let status = false;
 
     if (users.length < 2) return BadRespose(res, status, "More than 2 people's are required to form a group")
@@ -192,10 +193,23 @@ const creategroup = async (req, res) => {
         if (Fullgroup.length < 1) {
             return BadRespose(res, status, "Failed to create group try again later")
         }
+
+        // { chatId: selectedChat?._id, content, receiverIds: selectedChat.users.filter(u => u._id !== user?._id).map(u => u._id), msgType }
+        let createdGroup = Fullgroup[0]
+
+        const content = { message: `${createdGroup.groupAdmin[0].name.split(' ')[0]} created group "${createdGroup.chatName}" and added ${userNames}` }
+        const receiverIds = createdGroup.users.filter(u => String(u._id) !== String(req.user._id)).map(u => u._id)
+        const msgPayload = { chatId: createdGroup._id, content, receiverIds, msgType: "info" }
+
+        await saveInitialGroupMsg(req, msgPayload)
+
         let chats = await fetchallchatsCommon(req)
 
-        return res.status(201).json({ status: true, message: "New Group created sucessfully", Fullgroup: Fullgroup[0], chats })
+        createdGroup = chats.filter(c => String(c._id) === String(createdGroup._id))[0]
+
+        return res.status(201).json({ status: true, message: "New Group created sucessfully", Fullgroup: createdGroup, chats })
     } catch (error) {
+        console.log(error);
         return errorRespose(res, status, error)
     }
 }

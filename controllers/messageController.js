@@ -9,73 +9,83 @@ const prepareNewMessageObj = (content, sender, chat, seenBy, msgType) => {
     return { content, sender, chat, seenBy, msgType }
 }
 
+const saveMessage = async (req, msgPayload) => {
+    const { content, chatId, receiverIds, msgType } = msgPayload
+
+    const newMessage = prepareNewMessageObj(content, req.user._id, chatId, [req.user._id], msgType)
+
+    let message = await new Message(newMessage).save();
+
+    let chat = await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id, $set: { deletedFor: [] } });
+
+    let unseenMsgCountObj = {}
+
+    if (!chat.unseenMsgsCountBy) {
+
+        receiverIds.forEach((id) => {
+            unseenMsgCountObj[id] = 1
+        })
+        unseenMsgCountObj[req.user._id] = 0
+
+    }
+    else {
+
+        unseenMsgCountObj = chat.unseenMsgsCountBy;
+
+        Object.keys(unseenMsgCountObj).forEach(k => { // k key := userId as the key!
+
+            if (k !== String(req.user._id)) {
+                unseenMsgCountObj[k] += 1
+            }
+            else {
+                unseenMsgCountObj[k] = 0
+            }
+        })
+    }
+    await Chat.findByIdAndUpdate(chatId, { unseenMsgsCountBy: unseenMsgCountObj })
+
+    // message = await Message.find({_id:message._id}).populate('sender','-password').populate('chat')
+
+    message = await (await message.populate('sender', '-password')).populate('chat') // same as above commented line!
+
+    const fullmessage = await User.populate(message, {
+        path: "chat.users",
+        select: "name avatar email phone about"
+    });
+
+    let allMessages = await Message.find({
+        chat: chatId
+    }).populate('sender', '-password').populate('chat').populate('reactions.user');
+
+    // updating total messages inthe chat model of id chatId..................
+    let totalmessages = allMessages.length;
+
+    console.log("totalmessages--",totalmessages);
+
+    await Chat.findByIdAndUpdate(chatId, { totalMessages: totalmessages })
+
+    return { allMessages, fullmessage }
+}
+
 const sendMessage = async (req, res) => {
 
-    const { content, chatId, receiverIds, msgType } = req.body;
+    const { content, chatId, receiverIds } = req.body;
 
     if (!content || !chatId || !receiverIds) return BadRespose(res, false, "Invalid data send with the request!");
 
     try {
-        const newMessage = prepareNewMessageObj(content, req.user._id, chatId, [req.user._id], msgType)
 
-        let message = await new Message(newMessage).save();
-
-        let chat = await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id, $set: { deletedFor: [] } });
-
-        let unseenMsgCountObj = {}
-
-        if (!chat.unseenMsgsCountBy) {
-
-            receiverIds.forEach((id) => {
-                unseenMsgCountObj[id] = 1
-            })
-            unseenMsgCountObj[req.user._id] = 0
-
-        }
-        else {
-
-            unseenMsgCountObj = chat.unseenMsgsCountBy;
-
-            Object.keys(unseenMsgCountObj).forEach(k => { // k key := userId as the key!
-
-                if (k !== String(req.user._id)) {
-                    unseenMsgCountObj[k] += 1
-                }
-                else {
-                    unseenMsgCountObj[k] = 0
-                }
-            })
-        }
-
-        await Chat.findByIdAndUpdate(chatId, { unseenMsgsCountBy: unseenMsgCountObj })
-
-        // message = await Message.find({_id:message._id}).populate('sender','-password').populate('chat')
-
-        message = await (await message.populate('sender', '-password')).populate('chat') // same as above commented line!
-
-        const fullmessage = await User.populate(message, {
-            path: "chat.users",
-            select: "name avatar email phone about"
-        });
-
-        let allMessages = await Message.find({
-            chat: chatId
-        }).populate('sender', '-password').populate('chat').populate('reactions.user');
-
-        // updating total messages inthe chat model of id chatId..................
-        let totalmessages = allMessages.length;
-
-        await Chat.findByIdAndUpdate(chatId, { totalMessages: totalmessages })
+        const { fullmessage, allMessages } = await saveMessage(req, { ...req.body })
 
         // needs to refresh the chats to show the updated chat by latestmessage at the top in the frontend!
         let chats = await fetchallchatsCommon(req)
-
         res.status(201).json({ status: true, message: "Message sent", fullmessage, allMessages, chats })
 
     } catch (error) {
         errorRespose(res, false, error)
     }
 }
+
 const fetchallMessages = async (req, res) => {
 
     const { chatId } = req.params;
@@ -154,7 +164,7 @@ const deleteReactionMessages = async (chatId) => {
     try {
         await Message.deleteMany({ chat: chatId, msgType: 'reaction' })
     } catch (error) {
-        console.log("Error in delateAllReactMessages - ", error.message);
+        console.log("Error while deletingAllReactMessages - ", error.message);
     }
 }
 const reactMessage = async (req, res) => {
@@ -176,12 +186,15 @@ const reactMessage = async (req, res) => {
         function isUserReactionMessage(msg) {
             return msg.msgType === 'reaction' && String(msg.sender) === String(req.user._id)
         }
+        function isSameReaction(msg) {
+            return msg.reactions.filter(rec => String(rec.user) === String(req.user._id))[0].reaction === reaction
+        }
         // Deleting all the reaction message before adding new ones this is because as we are only showing the last reacted message in the latestmessage of the chat---
         isUserReactionMessage(lastMsg) && deleteReactionMessages(msg.chat)
 
         if ((msg.reactions.map(rec => String(rec.user)).includes(String(req.user._id))
             &&
-            msg.reactions.filter(rec => String(rec.user) === String(req.user._id))[0].reaction === reaction)) {
+            isSameReaction(msg))) {
 
             msg = await Message.findByIdAndUpdate(id, { $pull: { reactions: { user: req.user._id } } }, { new: true })
 
@@ -211,7 +224,6 @@ const reactMessage = async (req, res) => {
 
             const newMessage = prepareNewMessageObj(content, req.user._id, msg.chat, [req.user._id], 'reaction')
             let newMsg = await new Message(newMessage).save()
-            console.log(newMsg);
             await Chat.updateOne({ _id: newMsg.chat }, { latestMessage: newMsg._id })
         }
 
@@ -263,6 +275,7 @@ const getUnseenmessageCountTesting = async (req, res) => {
 
 module.exports = {
     sendMessage,
+    saveMessage,
     fetchallMessages,
     updateMessageSeenBy,
     deleteMessage,

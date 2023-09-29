@@ -7,7 +7,7 @@ const {
     deleteMessages,
     deleteMessage,
     reactMessage } = require('../controllers/messageController')
-    
+
 const router = express.Router()
 const authorize = require('../middleware/authorization')
 
@@ -18,7 +18,7 @@ router.post("/seenMessage", authorize, updateMessageSeenBy)
 router.put("/:id/delete", authorize, deleteMessage)
 router.put("/:id/react", authorize, reactMessage)
 
-router.post("/delete/messages/:chatId/:msgType", authorize, deleteMessages)
+router.put("/delete/messages/:chatId/:msgType", deleteMessages)
 router.get("/getUnseenmessageCount", authorize, getUnseenmessageCountTesting)
 
 
