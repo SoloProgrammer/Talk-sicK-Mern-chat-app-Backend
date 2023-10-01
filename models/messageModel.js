@@ -8,8 +8,14 @@ const messageSchema = new Schema({
         ref: 'users'
     },
     content: {
-        type: Object,
-        require: true
+        img: {
+            type: String
+        },
+        message: {
+            type: String
+        },
+        reactedToMsg: { type: Schema.Types.ObjectId, ref: 'messages' },
+        lastregularMsg: { type: Schema.Types.ObjectId, ref: 'messages' }
     },
     chat: {
         type: Schema.Types.ObjectId,

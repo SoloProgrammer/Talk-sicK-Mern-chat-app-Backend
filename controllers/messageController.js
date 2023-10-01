@@ -2,11 +2,21 @@ const Chat = require('../models/chatModel')
 const Message = require('../models/messageModel')
 const User = require('../models/userModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
-const { fetchallchatsCommon } = require('../config/chatConfig')
+const { fetchallchatsWithPopulatedFields } = require('../config/chatConfig')
 
 
 const prepareNewMessageObj = (content, sender, chat, seenBy, msgType) => {
     return { content, sender, chat, seenBy, msgType }
+}
+
+const getFullmessageById = async (msgId) => {
+    let msg = await Message.findById(msgId).populate('sender', '-password').populate('chat')
+
+    msg = await User.populate(msg, {
+        path: 'reactions.user',
+        select: '-password'
+    })
+    return msg
 }
 
 const saveMessage = async (req, msgPayload) => {
@@ -60,7 +70,7 @@ const saveMessage = async (req, msgPayload) => {
     // updating total messages inthe chat model of id chatId..................
     let totalmessages = allMessages.length;
 
-    console.log("totalmessages--",totalmessages);
+    console.log("totalmessages--", totalmessages);
 
     await Chat.findByIdAndUpdate(chatId, { totalMessages: totalmessages })
 
@@ -78,7 +88,7 @@ const sendMessage = async (req, res) => {
         const { fullmessage, allMessages } = await saveMessage(req, { ...req.body })
 
         // needs to refresh the chats to show the updated chat by latestmessage at the top in the frontend!
-        let chats = await fetchallchatsCommon(req)
+        let chats = await fetchallchatsWithPopulatedFields(req)
         res.status(201).json({ status: true, message: "Message sent", fullmessage, allMessages, chats })
 
     } catch (error) {
@@ -126,7 +136,7 @@ const updateMessageSeenBy = async (req, res) => {
 
         if (!updatedMsg) return BadRespose(res, false, "Message unable to seen due to Network Error!")
 
-        let chats = await fetchallchatsCommon(req) // this newly updated chats will refreshed the chats in the frontend to show that he seen the laststmsg ! 
+        let chats = await fetchallchatsWithPopulatedFields(req) // this newly updated chats will refreshed the chats in the frontend to show that he seen the laststmsg ! 
 
         let messages = await Message.find({
             chat: chatId
@@ -179,9 +189,12 @@ const reactMessage = async (req, res) => {
             reaction
         }
 
-        let lastMsg, msgs;
+        let lastMsg, msgs, lastRegMsg;
         msgs = await Message.find({ chat: msg.chat })
         lastMsg = msgs[msgs.length - 1]
+
+        lastRegMsg = msgs.filter(m => m.msgType !== 'reaction')
+        lastRegMsg = lastRegMsg[lastRegMsg.length - 1]
 
         function isUserReactionMessage(msg) {
             return msg.msgType === 'reaction' && String(msg.sender) === String(req.user._id)
@@ -221,18 +234,16 @@ const reactMessage = async (req, res) => {
             else if (msg?.content.img) {
                 content.message = `Reacted ${reaction} to image`
             }
+            content.reactedToMsg = msg._id;
+            content.lastregularMsg = lastRegMsg._id
 
             const newMessage = prepareNewMessageObj(content, req.user._id, msg.chat, [req.user._id], 'reaction')
             let newMsg = await new Message(newMessage).save()
+        
             await Chat.updateOne({ _id: newMsg.chat }, { latestMessage: newMsg._id })
         }
 
-        msg = await Message.findById(id).populate('sender', '-password').populate('chat')
-
-        msg = await User.populate(msg, {
-            path: 'reactions.user',
-            select: '-password'
-        })
+        msg = await getFullmessageById(id)
 
         res.json({ status: true, msg })
 

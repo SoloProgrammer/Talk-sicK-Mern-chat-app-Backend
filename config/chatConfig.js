@@ -1,8 +1,9 @@
 const Chat = require('../models/chatModel')
 const User = require('../models/userModel')
+const Message = require('../models/messageModel')
 const { BadRespose, errorRespose } = require('./errorStatus')
 
-const fetchallchatsCommon = async (req) => {
+const fetchallchatsWithPopulatedFields = async (req) => {
     try {
         let chats = await Chat.find(
             {
@@ -32,6 +33,35 @@ const fetchallchatsCommon = async (req) => {
             path: "latestMessage.sender",
             select: "name avatar email phone"
         });
+
+        chats = await Message.populate(chats, [
+            {
+                path: "latestMessage.content.reactedToMsg"
+            },
+            {
+                path: "latestMessage.content.lastregularMsg"
+            }
+        ])
+
+        chats = await Chat.populate(chats, [
+            {
+                path: "latestMessage.content.reactedToMsg.chat"
+            },
+            {
+                path: "latestMessage.content.lastregularMsg.chat"
+            }
+        ])
+
+        chats = await User.populate(chats, [
+            {
+                path: "latestMessage.content.reactedToMsg.sender",
+                select: "name avatar email phone"
+            },
+            {
+                path: "latestMessage.content.lastregularMsg.sender",
+                select: "name avatar email phone"
+            }
+        ])
 
         // needs to get the users who seen the lastetMessage inside seenBy aarry of lastestMessage and according to that at the first load of app if any of lastetMessage is not seen by user will gave him notification!
 
@@ -68,4 +98,4 @@ const Getfullchat = async (chatId) => {
     return chat;
 }
 
-module.exports = { fetchallchatsCommon, Getfullchat }
+module.exports = { fetchallchatsWithPopulatedFields, Getfullchat }

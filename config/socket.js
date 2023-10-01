@@ -97,9 +97,16 @@ const connectToSocket = (server) => {
             socket.on('delete message', (deletedMsg) => {
                 io.emit('deleted message', deletedMsg)
             })
-            
+
             socket.on('react message', (reactedMsg, reacted_user) => {
                 io.emit('react message', reactedMsg, reacted_user)
+            })
+
+            socket.on('group created', (createdBy, createdGrp) => {
+                const grpUsersIds = createdGrp.users.map(u => u._id)
+                grpUsersIds.forEach(uId => {
+                    uId !== createdBy._id && socket.in(uId).emit('group created', createdGrp)
+                })
             })
 
         })

@@ -2,7 +2,7 @@ const Chat = require('../models/chatModel')
 const User = require('../models/userModel')
 const Message = require('../models/messageModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
-const { fetchallchatsCommon, Getfullchat } = require('../config/chatConfig');
+const { fetchallchatsWithPopulatedFields, Getfullchat } = require('../config/chatConfig');
 const { saveMessage: saveInitialGroupMsg } = require('./messageController');
 
 const accesschat = async (req, res) => {
@@ -27,7 +27,7 @@ const accesschat = async (req, res) => {
 
         let status = true
 
-        let chats = await fetchallchatsCommon(req);
+        let chats = await fetchallchatsWithPopulatedFields(req);
 
         if (isChat.length < 1) {
             let newChat = {
@@ -41,7 +41,7 @@ const accesschat = async (req, res) => {
 
                 let fullCreatedChat = await Getfullchat(createdChat._id);
 
-                chats = await fetchallchatsCommon(req);
+                chats = await fetchallchatsWithPopulatedFields(req);
 
                 res.status(201).json({ status, message: "Chat has been created Successfully", chat: fullCreatedChat[0], chats })
             } catch (error) {
@@ -72,7 +72,8 @@ const deleteChat = async (req, res) => {
             return res.status(200).json({ status: true, message: "Chat deleted" });
         }
 
-        let deletedChat = await Chat.findByIdAndUpdate(chatId, { $push: { deletedFor: req.user._id }, $pull: { createdBy: req.user._id, pinnedBy: req.user._id, archivedBy: req.user._id, mutedNotificationBy: req.user._id } }, { new: true });
+        let deletedChat =
+            await Chat.findByIdAndUpdate(chatId, { $push: { deletedFor: req.user._id }, $pull: { createdBy: req.user._id, pinnedBy: req.user._id, archivedBy: req.user._id, mutedNotificationBy: req.user._id } }, { new: true });
 
         if (!deletedChat) return BadRespose(res, false, "Failed to delete chat!");
 
@@ -154,7 +155,7 @@ const fetchallchats = async (req, res) => {
     let status = false
     try {
 
-        let chats = await fetchallchatsCommon(req)
+        let chats = await fetchallchatsWithPopulatedFields(req)
 
         res.status(200).json({ status: true, chats })
     } catch (error) {
@@ -203,7 +204,7 @@ const creategroup = async (req, res) => {
 
         await saveInitialGroupMsg(req, msgPayload)
 
-        let chats = await fetchallchatsCommon(req)
+        let chats = await fetchallchatsWithPopulatedFields(req)
 
         createdGroup = chats.filter(c => String(c._id) === String(createdGroup._id))[0]
 
@@ -225,7 +226,7 @@ const updategroup = async (req, res) => {
 
         if (!updatedGroup) return BadRespose(res, false, "unable to update profile, Network Error..!");
 
-        let chats = await fetchallchatsCommon(req)
+        let chats = await fetchallchatsWithPopulatedFields(req)
 
         res.status(200).json({ status: true, chats, message: "Group Profile Updated Sucessfully 🎉" })
 
@@ -244,7 +245,7 @@ const addGroupAdmin = async (req, res) => {
 
         let chat = await Getfullchat(chatId)
 
-        let chats = await fetchallchatsCommon(req)
+        let chats = await fetchallchatsWithPopulatedFields(req)
 
         return res.status(200).json({ status: true, message: "Member updated as a GroupAdmin!", chat: chat[0], chats })
     } catch (error) {
@@ -261,7 +262,7 @@ const removeGroupAdmin = async (req, res) => {
 
         let chat = await Getfullchat(chatId)
 
-        let chats = await fetchallchatsCommon(req)
+        let chats = await fetchallchatsWithPopulatedFields(req)
 
         return res.status(200).json({ status: true, message: "Member removed from GroupAdmin!", chat: chat[0], chats })
 
@@ -286,7 +287,7 @@ const addTogroup = async (req, res) => {
 
         let chat = await Getfullchat(chatId)
 
-        let chats = await fetchallchatsCommon(req)
+        let chats = await fetchallchatsWithPopulatedFields(req)
 
         res.status(200).json({ status: true, message: `New ${users.length > 1 ? "members" : "member"} added to Group`, chat: chat[0], chats })
 
@@ -329,11 +330,11 @@ const removeFromgroup = async (req, res) => {
     try {
         let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId, groupAdmin: userId, archivedBy: userId } }, { new: true });
 
-        if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
+        if (!updatedChat) return errorRespose(res, false, { message: "Failed to remove from group" })
 
         let chat = await Getfullchat(chatId)
 
-        let chats = await fetchallchatsCommon(req)
+        let chats = await fetchallchatsWithPopulatedFields(req)
 
         return res.status(200).json({ status: true, message: "Member removed from group sucessfully", chat: chat[0], chats })
     } catch (error) {
