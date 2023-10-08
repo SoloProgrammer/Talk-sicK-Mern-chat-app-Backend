@@ -24,18 +24,29 @@ const chatSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "users"
     }],
-    archivedBy:[{
+    archivedBy: [{
         type: Schema.Types.ObjectId,
         ref: "users"
     }],
-    mutedNotificationBy:[{
-        type:Schema.Types.ObjectId,
-        ref:"users",
+    mutedNotificationBy: [{
+        type: Schema.Types.ObjectId,
+        ref: "users",
     }],
     isGroupchat: {
         type: Boolean,
         default: false
     },
+    leftFromGroup: [{
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'users'
+        },
+        totalMsgCount: { type: Number },
+        latestMessage: {
+            type: Schema.Types.ObjectId,
+            ref: 'messages'
+        }
+    }],
     groupAvatar: {
         type: String,
         default: "https://tse2.mm.bing.net/th?id=OIP.OtLqKEL4eIvyiNSJZ4pT-wHaHa&pid=Api&P=0"
@@ -47,8 +58,8 @@ const chatSchema = new Schema({
     totalMessages: {
         type: Number
     },
-    unseenMsgsCountBy:{
-        type:Object
+    unseenMsgsCountBy: {
+        type: Object
     },
     groupAdmin: [{
         type: Schema.Types.ObjectId,

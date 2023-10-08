@@ -69,12 +69,13 @@ const connectToSocket = (server) => {
                 })
                 io.emit("stop typing", typingInfo)
                 // console.log("after typinfInfo", typingInfo);
-
             })
 
             socket.on('new message', (newMessageRecieved) => {
 
                 var chat = newMessageRecieved.chat
+
+                usersLeftTheGroupChat = newMessageRecieved?.chat?.leftFromGroup.map(item => String(item.user))
 
                 if (!chat) return console.log("chat not defined");
 
@@ -82,7 +83,7 @@ const connectToSocket = (server) => {
 
                 chat.users.forEach(user => {
 
-                    if (user._id === newMessageRecieved.sender._id) return
+                    if (user._id === newMessageRecieved.sender._id || (newMessageRecieved?.chat?.isGroupchat && usersLeftTheGroupChat.includes(String(user._id)))) return
 
                     socket.in(user._id).emit("message recieved", newMessageRecieved, user)
                 });

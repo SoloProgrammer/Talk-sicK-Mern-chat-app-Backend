@@ -8,7 +8,6 @@ const { fetchallchatsWithPopulatedFields } = require('../config/chatConfig')
 const prepareNewMessageObj = (content, sender, chat, seenBy, msgType) => {
     return { content, sender, chat, seenBy, msgType }
 }
-
 const getFullmessageById = async (msgId) => {
     let msg = await Message.findById(msgId).populate('sender', '-password').populate('chat')
 
@@ -18,7 +17,6 @@ const getFullmessageById = async (msgId) => {
     })
     return msg
 }
-
 const saveMessage = async (req, msgPayload) => {
     const { content, chatId, receiverIds, msgType } = msgPayload
 
@@ -29,6 +27,10 @@ const saveMessage = async (req, msgPayload) => {
     let chat = await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id, $set: { deletedFor: [] } });
 
     let unseenMsgCountObj = {}
+
+    function isUserRemovedFromChat(chat, uId) {
+        return chat?.leftFromGroup?.map(obj => String(obj.user)).includes(String(uId))
+    }
 
     if (!chat.unseenMsgsCountBy) {
 
@@ -42,13 +44,13 @@ const saveMessage = async (req, msgPayload) => {
 
         unseenMsgCountObj = chat.unseenMsgsCountBy;
 
-        Object.keys(unseenMsgCountObj).forEach(k => { // k key := userId as the key!
+        Object.keys(unseenMsgCountObj).forEach(uId => { // k key := userId as the key!
 
-            if (k !== String(req.user._id)) {
-                unseenMsgCountObj[k] += 1
+            if (uId !== String(req.user._id)) {
+                if (!isUserRemovedFromChat(chat, uId)) unseenMsgCountObj[uId] += 1
             }
             else {
-                unseenMsgCountObj[k] = 0
+                unseenMsgCountObj[uId] = 0
             }
         })
     }
@@ -63,19 +65,19 @@ const saveMessage = async (req, msgPayload) => {
         select: "name avatar email phone about"
     });
 
+    chat = await Chat.findByIdAndUpdate(chatId, { totalMessages: (fullmessage.chat.totalMessages || 0) + 1 }, { new: true })
+
+    fullmessage.chat.totalMessages = chat.totalMessages
+
     let allMessages = await Message.find({
-        chat: chatId
+        chat: chatId,
+        msgType: { $ne: 'reaction' }
     }).populate('sender', '-password').populate('chat').populate('reactions.user');
 
-    // updating total messages inthe chat model of id chatId..................
-    let totalmessages = allMessages.length;
-
-    console.log("totalmessages--", totalmessages);
-
-    await Chat.findByIdAndUpdate(chatId, { totalMessages: totalmessages })
-
-    return { allMessages, fullmessage }
+    return { allMessages, fullmessage, chat }
 }
+
+
 
 const sendMessage = async (req, res) => {
 
@@ -95,7 +97,6 @@ const sendMessage = async (req, res) => {
         errorRespose(res, false, error)
     }
 }
-
 const fetchallMessages = async (req, res) => {
 
     const { chatId } = req.params;
@@ -105,7 +106,7 @@ const fetchallMessages = async (req, res) => {
 
     try {
 
-        const allMessages = await Message.find({ chat: chatId })
+        const allMessages = await Message.find({ chat: chatId, msgType: { $ne: 'reaction' } })
             .skip(skip).limit(limit)
             .populate('sender', '-password')
             .populate('chat')
@@ -202,8 +203,8 @@ const reactMessage = async (req, res) => {
         function isSameReaction(msg) {
             return msg.reactions.filter(rec => String(rec.user) === String(req.user._id))[0].reaction === reaction
         }
-        // Deleting all the reaction message before adding new ones this is because as we are only showing the last reacted message in the latestmessage of the chat---
-        isUserReactionMessage(lastMsg) && deleteReactionMessages(msg.chat)
+        // Deleting all the reaction message before adding new ones this is because as we are only showing the last reacted message as the latestmessage of the chat---
+        deleteReactionMessages(msg.chat)
 
         if ((msg.reactions.map(rec => String(rec.user)).includes(String(req.user._id))
             &&
@@ -211,7 +212,7 @@ const reactMessage = async (req, res) => {
 
             msg = await Message.findByIdAndUpdate(id, { $pull: { reactions: { user: req.user._id } } }, { new: true })
 
-            // here we are chking if the last reaction message is of the same user who is removing reaction from the message if not then it is the case when user is trying to remove reaction from any of his previous message--- which is why we don't need to update the lastetmenssage with the very last message of the chat as it is of different user! 
+            // here we are cheking if the last reaction message is of the same user who is removing reaction from the message if not then it is the case when user is trying to remove reaction from any of his previous message--- which is why we don't need to update the lastetmenssage with the very last message of the chat as it is of different user! 
             if (!isUserReactionMessage(lastMsg)) return
 
             // Here we are removing the reaction so we also have to remove reaction message as the latestmessage of the chat and put the very last message as the latestmessage---
@@ -223,10 +224,9 @@ const reactMessage = async (req, res) => {
             await Message.updateOne({ _id: id }, { $pull: { reactions: { user: req.user._id } } })
             msg = await Message.findByIdAndUpdate(id, { $push: { reactions: newReaction } }, { new: true })
 
-            // Below code is to create newMessage that show (reaction to message) for eg- (reacted 🤣 to xyz..message) and update the latestmessage with this newly created reaction message---- 
-            // and here any how we have to delete the previous reaction message and add the new one as the latestMessage of the chat
-            await deleteReactionMessages(msg.chat)
+            // Below code is to create newMessage that show (reaction to message) for eg- (reacted 🤣 to xyz..message) and update the latestmessage with this newly created reaction message----
 
+            // Preparing new reaction message to save as latestMessage of the chat...
             let content = {};
             if (msg?.content?.message) {
                 content.message = `Reacted ${reaction} to ${msg.content.message}`
@@ -239,7 +239,7 @@ const reactMessage = async (req, res) => {
 
             const newMessage = prepareNewMessageObj(content, req.user._id, msg.chat, [req.user._id], 'reaction')
             let newMsg = await new Message(newMessage).save()
-        
+
             await Chat.updateOne({ _id: newMsg.chat }, { latestMessage: newMsg._id })
         }
 
@@ -283,14 +283,24 @@ const getUnseenmessageCountTesting = async (req, res) => {
 
     res.status(200).json({ unSeenMessages: data })
 }
+const getMessagesCount = async (req, res) => {
+    try {
+        const count = await Message.find({ chat: req.params.chatId, $or: [{ msgType: "info" }, { msgType: "regular" }] }).count()
+        res.json({ count })
+    } catch (error) {
+        errorRespose(res, false, error)
+    }
+}
 
 module.exports = {
     sendMessage,
+    prepareNewMessageObj,
     saveMessage,
     fetchallMessages,
     updateMessageSeenBy,
     deleteMessage,
     reactMessage,
     deleteMessages,
-    getUnseenmessageCountTesting
+    getMessagesCount,
+    getUnseenmessageCountTesting,
 }

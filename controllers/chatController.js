@@ -3,8 +3,11 @@ const User = require('../models/userModel')
 const Message = require('../models/messageModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
 const { fetchallchatsWithPopulatedFields, Getfullchat } = require('../config/chatConfig');
-const { saveMessage: saveInitialGroupMsg } = require('./messageController');
+const { saveMessage: saveInitialGroupMsg, saveMessage } = require('./messageController');
 
+const getUserById = async (userId) => {
+    return await User.findById(userId).select('-password')
+}
 const accesschat = async (req, res) => {
     const { userId } = req.body;
     if (!userId) return BadRespose(res, false, "UserId param not send with the request")
@@ -281,21 +284,35 @@ const addTogroup = async (req, res) => {
     if (users.length < 1) return BadRespose(res, status, "Please select atleast one user to add into the Group")
 
     try {
-        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $addToSet: { users: [...users] } }, { new: true })
+        let chat = await Chat.findById(chatId).populate('latestMessage')
+
+        let leftFromGroup = chat.leftFromGroup
+
+        let updatedLeftFromGroup = [];
+
+        leftFromGroup.forEach(obj => {
+            if (!users.includes(String(obj.user))) {
+                updatedLeftFromGroup.push(obj)
+            }
+        })
+
+        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $set: { leftFromGroup: updatedLeftFromGroup }, $addToSet: { users: [...users] } }, { new: true })
 
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to add users into group" })
 
-        let chat = await Getfullchat(chatId)
+        chat = await Getfullchat(chatId)
 
         let chats = await fetchallchatsWithPopulatedFields(req)
 
         res.status(200).json({ status: true, message: `New ${users.length > 1 ? "members" : "member"} added to Group`, chat: chat[0], chats })
 
+        // The below code is needed because suppose if any of the user from the group is removed/left from the group but we still have to add the new message count for that user as well bcz in future if that user will be added in the group again than we have to show him the exact count of new messages that he has not seen!
         let unseenMsgCountObj = {};
 
         users.forEach(async (userId, i) => {
             const count = await Message.find({
                 chat: chatId,
+                msgType: { $ne: 'reaction' },
                 $and: [
                     { sender: { $ne: userId } },
                     { seenBy: { $nin: [userId] } },
@@ -314,32 +331,58 @@ const addTogroup = async (req, res) => {
                 // console.log(updatedChat)
             }
         });
-
-
+        
     } catch (error) {
         return errorRespose(res, status, error)
     }
 
 }
 const removeFromgroup = async (req, res) => {
-    const { chatId, userId } = req.body
+    const { chatId, userId, message } = req.body
     let status = false
 
     if (!chatId || !userId) return BadRespose(res, status, "userId or chatId not send with the request body")
 
     try {
-        let updatedChat = await Chat.findByIdAndUpdate(chatId, { $pull: { users: userId, groupAdmin: userId, archivedBy: userId } }, { new: true });
+        const content = { message }
+        const chatById = await Chat.findById(chatId)
+        const receiverIds = chatById.users.filter(u => String(u) !== String(req.user._id))
+        const msgPayload = { content, chatId, receiverIds, msgType: 'info' }
+        let { fullmessage: grpRemovedMsg, chat } = await saveMessage(req, msgPayload)
+
+        let leftUserObj = {
+            user: userId,
+            totalMsgCount: chat.totalMessages,
+            latestMessage: grpRemovedMsg._id
+        }
+        let updatedChat = await Chat.findByIdAndUpdate(chatId,
+            {
+                $pull: { groupAdmin: userId },
+                $push: { leftFromGroup: leftUserObj }
+            }, { new: true });
 
         if (!updatedChat) return errorRespose(res, false, { message: "Failed to remove from group" })
 
-        let chat = await Getfullchat(chatId)
+        chat = await Getfullchat(chatId)
 
         let chats = await fetchallchatsWithPopulatedFields(req)
 
-        return res.status(200).json({ status: true, message: "Member removed from group sucessfully", chat: chat[0], chats })
+        return res.status(200).json({ status: true, message: "Member removed from group sucessfully", chat: chat[0], chats, grpRemovedMsg })
     } catch (error) {
         return errorRespose(res, status, error)
     }
 }
 
-module.exports = { accesschat, deleteChat, pinOrUnpinChat, muteOrUnmuteNotification, archiveOrUnarchiveChat, fetchallchats, creategroup, updategroup, addTogroup, removeFromgroup, addGroupAdmin, removeGroupAdmin } 
+module.exports = {
+    accesschat,
+    deleteChat,
+    pinOrUnpinChat,
+    muteOrUnmuteNotification,
+    archiveOrUnarchiveChat,
+    fetchallchats,
+    creategroup,
+    updategroup, 
+    addTogroup,
+    removeFromgroup, addGroupAdmin,
+    removeGroupAdmin
+} 

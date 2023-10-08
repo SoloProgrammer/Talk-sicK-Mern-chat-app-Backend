@@ -40,6 +40,9 @@ const fetchallchatsWithPopulatedFields = async (req) => {
             },
             {
                 path: "latestMessage.content.lastregularMsg"
+            },
+            {
+                path: "leftFromGroup.latestMessage",
             }
         ])
 
@@ -49,6 +52,9 @@ const fetchallchatsWithPopulatedFields = async (req) => {
             },
             {
                 path: "latestMessage.content.lastregularMsg.chat"
+            },
+            {
+                path: "leftFromGroup.latestMessage.chat",
             }
         ])
 
@@ -59,6 +65,14 @@ const fetchallchatsWithPopulatedFields = async (req) => {
             },
             {
                 path: "latestMessage.content.lastregularMsg.sender",
+                select: "name avatar email phone"
+            },
+            {
+                path: "leftFromGroup.latestMessage.sender",
+                select: "name avatar email phone"
+            },
+            {
+                path: "leftFromGroup.user",
                 select: "name avatar email phone"
             }
         ])
