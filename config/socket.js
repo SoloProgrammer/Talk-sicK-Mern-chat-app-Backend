@@ -100,6 +100,7 @@ const connectToSocket = (server) => {
             })
 
             socket.on('react message', (reactedMsg, reacted_user) => {
+                console.log("reacted to -");
                 io.emit('react message', reactedMsg, reacted_user)
             })
 
@@ -109,7 +110,6 @@ const connectToSocket = (server) => {
                     uId !== createdBy._id && socket.in(uId).emit('group created', createdGrp)
                 })
             })
-
         })
     } catch (error) {
         console.log("Some error occured while connecting with the socket.io ERROR: ", error)

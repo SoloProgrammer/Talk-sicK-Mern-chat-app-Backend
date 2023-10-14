@@ -204,7 +204,6 @@ const reactMessage = async (req, res) => {
             return msg.reactions.filter(rec => String(rec.user) === String(req.user._id))[0].reaction === reaction
         }
         // Deleting all the reaction message before adding new ones this is because as we are only showing the last reacted message as the latestmessage of the chat---
-        deleteReactionMessages(msg.chat)
 
         if ((msg.reactions.map(rec => String(rec.user)).includes(String(req.user._id))
             &&
@@ -212,15 +211,17 @@ const reactMessage = async (req, res) => {
 
             msg = await Message.findByIdAndUpdate(id, { $pull: { reactions: { user: req.user._id } } }, { new: true })
 
-            // here we are cheking if the last reaction message is of the same user who is removing reaction from the message if not then it is the case when user is trying to remove reaction from any of his previous message--- which is why we don't need to update the lastetmenssage with the very last message of the chat as it is of different user! 
-            if (!isUserReactionMessage(lastMsg)) return
+            if(lastMsg.msgType === 'reaction' && String(lastMsg.content.reactedToMsg) === String(msg._id) && isUserReactionMessage(lastMsg)){
+                await deleteReactionMessages(msg.chat)
+                // Here we are removing the reaction so we also have to remove reaction message as the latestmessage of the chat and put the very last message as the latestmessage---
+                msgs = await Message.find({ chat: msg.chat })
+                lastMsg = msgs[msgs.length - 1]
+                await Chat.updateOne({ _id: lastMsg.chat }, { latestMessage: lastMsg._id })
+            }
 
-            // Here we are removing the reaction so we also have to remove reaction message as the latestmessage of the chat and put the very last message as the latestmessage---
-            msgs = await Message.find({ chat: msg.chat })
-            lastMsg = msgs[msgs.length - 1]
-            await Chat.updateOne({ _id: lastMsg.chat }, { latestMessage: lastMsg._id })
         }
         else {
+            deleteReactionMessages(msg.chat)
             await Message.updateOne({ _id: id }, { $pull: { reactions: { user: req.user._id } } })
             msg = await Message.findByIdAndUpdate(id, { $push: { reactions: newReaction } }, { new: true })
 
@@ -242,7 +243,7 @@ const reactMessage = async (req, res) => {
 
             await Chat.updateOne({ _id: newMsg.chat }, { latestMessage: newMsg._id })
         }
-
+        
         msg = await getFullmessageById(id)
 
         res.json({ status: true, msg })
