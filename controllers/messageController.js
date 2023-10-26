@@ -2,8 +2,9 @@ const Chat = require('../models/chatModel')
 const Message = require('../models/messageModel')
 const User = require('../models/userModel')
 const { errorRespose, BadRespose } = require('../config/errorStatus');
-const { fetchallchatsWithPopulatedFields } = require('../config/chatConfig')
-
+const { fetchallchatsWithPopulatedFields } = require('../config/chatConfig');
+const { default: mongoose } = require('mongoose');
+const { cloudinaryDeleteImg } = require('../helpers/Cloudinary');
 
 const prepareNewMessageObj = (content, sender, chat, seenBy, msgType) => {
     return { content, sender, chat, seenBy, msgType }
@@ -17,6 +18,7 @@ const getFullmessageById = async (msgId) => {
     })
     return msg
 }
+
 const saveMessage = async (req, msgPayload) => {
     const { content, chatId, receiverIds, msgType } = msgPayload
 
@@ -76,8 +78,6 @@ const saveMessage = async (req, msgPayload) => {
 
     return { allMessages, fullmessage, chat }
 }
-
-
 
 const sendMessage = async (req, res) => {
 
@@ -167,6 +167,17 @@ const deleteMessage = async (req, res) => {
 
         res.json({ msg })
 
+        // if deleted message has img as a content then del the image from the cloud as well...
+        if (msg.content.img && req.query.for === 'everyone') {
+            let imageSplit = msg.content.img.split('/')
+            let fileName = imageSplit[imageSplit.length - 1].split('.')[0]
+            try {
+                cloudinaryDeleteImg(fileName)
+            } catch (error) {
+                console.log("Error while deleting image from cloud -", error.message)
+            }
+        }
+
     } catch (error) {
         return errorRespose(res, false, error)
     }
@@ -211,7 +222,7 @@ const reactMessage = async (req, res) => {
 
             msg = await Message.findByIdAndUpdate(id, { $pull: { reactions: { user: req.user._id } } }, { new: true })
 
-            if(lastMsg.msgType === 'reaction' && String(lastMsg.content.reactedToMsg) === String(msg._id) && isUserReactionMessage(lastMsg)){
+            if (lastMsg.msgType === 'reaction' && String(lastMsg.content.reactedToMsg) === String(msg._id) && isUserReactionMessage(lastMsg)) {
                 await deleteReactionMessages(msg.chat)
                 // Here we are removing the reaction so we also have to remove reaction message as the latestmessage of the chat and put the very last message as the latestmessage---
                 msgs = await Message.find({ chat: msg.chat })
@@ -243,7 +254,7 @@ const reactMessage = async (req, res) => {
 
             await Chat.updateOne({ _id: newMsg.chat }, { latestMessage: newMsg._id })
         }
-        
+
         msg = await getFullmessageById(id)
 
         res.json({ status: true, msg })
@@ -254,21 +265,21 @@ const reactMessage = async (req, res) => {
     }
 }
 
-// The below two controllers are for testing purpose...!
+// The below three controllers are for testing purpose...!
 
 const deleteMessages = async (req, res) => {
     const { chatId, msgType } = req.params;
     try {
         let updatedData;
         if (msgType) {
-            updatedData = await Message.deleteMany({ chat: chatId, msgType }, { new: true })
+            updatedData = await Message.deleteMany({ chat: mongoose.Types.ObjectId(chatId), msgType }, { new: true })
         }
         else {
             updatedData = await Message.deleteMany({ chat: chatId }, { new: true })
         }
         res.json({ status: true, msg: "Mesages deleted sucessfully", updatedData })
     } catch (error) {
-
+        return errorRespose(res, false, error)
     }
 }
 const getUnseenmessageCountTesting = async (req, res) => {

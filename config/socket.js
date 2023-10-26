@@ -100,7 +100,6 @@ const connectToSocket = (server) => {
             })
 
             socket.on('react message', (reactedMsg, reacted_user) => {
-                console.log("reacted to -");
                 io.emit('react message', reactedMsg, reacted_user)
             })
 
@@ -108,6 +107,24 @@ const connectToSocket = (server) => {
                 const grpUsersIds = createdGrp.users.map(u => u._id)
                 grpUsersIds.forEach(uId => {
                     uId !== createdBy._id && socket.in(uId).emit('group created', createdGrp)
+                })
+            })
+
+            socket.on('group profile photo changed', (userId, chat, newPhotoURL) => {
+                if (!chat && !newPhotoURL) {
+                    return console.log("Chat or newPhotoURL not found!");
+                }
+                chat.users.map(u => u._id).forEach(uId => {
+                    String(userId) !== String(uId) && socket.in(uId).emit('group photo updated', chat._id, newPhotoURL)
+                })
+            })
+
+            socket.on('group name changed', (userId, chat, newName) => {
+                if (!chat && !newName) {
+                    return console.log("Chat or newChatName not found!");
+                }
+                chat.users.map(u => u._id).forEach(uId => {
+                    String(userId) !== String(uId) && socket.in(uId).emit('group name updated', chat._id, newName)
                 })
             })
         })

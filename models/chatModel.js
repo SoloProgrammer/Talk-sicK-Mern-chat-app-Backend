@@ -49,7 +49,7 @@ const chatSchema = new Schema({
     }],
     groupAvatar: {
         type: String,
-        default: "https://tse2.mm.bing.net/th?id=OIP.OtLqKEL4eIvyiNSJZ4pT-wHaHa&pid=Api&P=0"
+        default: "https://res.cloudinary.com/dvzjzf36i/image/upload/v1697539678/ge4vlfxbargv0bk2ilvi.png"
     },
     latestMessage: {
         type: Schema.Types.ObjectId,

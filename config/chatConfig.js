@@ -58,22 +58,23 @@ const fetchallchatsWithPopulatedFields = async (req) => {
             }
         ])
 
+        let fieldsToSelect = "name avatar email phone"
         chats = await User.populate(chats, [
             {
                 path: "latestMessage.content.reactedToMsg.sender",
-                select: "name avatar email phone"
+                select: fieldsToSelect
             },
             {
                 path: "latestMessage.content.lastregularMsg.sender",
-                select: "name avatar email phone"
+                select: fieldsToSelect
             },
             {
                 path: "leftFromGroup.latestMessage.sender",
-                select: "name avatar email phone"
+                select: fieldsToSelect
             },
             {
                 path: "leftFromGroup.user",
-                select: "name avatar email phone"
+                select: fieldsToSelect
             }
         ])
 
