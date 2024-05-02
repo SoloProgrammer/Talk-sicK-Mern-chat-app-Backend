@@ -7,7 +7,7 @@ cloudinary.config({
 });
 
 const cloudinaryDeleteImg = async (fileToDelete) => {
-  cloudinary.uploader.destroy(fileToDelete, (error) => {
+  cloudinary.uploader.destroy(fileToDelete, (error, _) => {
     if (error) {
       console.log("Error while deleting image from cloud -", error.message);
     }

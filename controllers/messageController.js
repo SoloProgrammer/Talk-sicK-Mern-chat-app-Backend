@@ -124,16 +124,12 @@ const updateMessageSeenBy = async (req, res) => {
 
         const { chatId } = req.body;
 
-        // console.log(chatId);
-
         const updatedMsg = await Message.updateMany({ chat: chatId }, { $addToSet: { seenBy: req.user._id } }, { new: true });
 
         // unseenMsgsCountKeyToUpdate - user id of that unseenmsgscountBy object..!s
         let unseenMsgsCountKeyToUpdate = `unseenMsgsCountBy.${req.user._id}` // key - property of the user which seen all the messages 
 
-        let updateStatus = await Chat.updateOne({ _id: chatId }, { $set: { [unseenMsgsCountKeyToUpdate]: 0 } }, { multi: true }) // updating unseen count of the user who seen all the messages or click the chat to view all the messages so we can update all the messages as he view all of them by clicking on that particular chat once
-
-        console.log(updateStatus, "..");
+        await Chat.updateOne({ _id: chatId }, { $set: { [unseenMsgsCountKeyToUpdate]: 0 } }, { multi: true }) // updating unseen count of the user who seen all the messages or click the chat to view all the messages so we can update all the messages as he view all of them by clicking on that particular chat once
 
         if (!updatedMsg) return BadRespose(res, false, "Message unable to seen due to Network Error!")
 
@@ -150,6 +146,7 @@ const updateMessageSeenBy = async (req, res) => {
     }
 
 }
+
 const deleteMessage = async (req, res) => {
     try {
         let deletedObj = {
