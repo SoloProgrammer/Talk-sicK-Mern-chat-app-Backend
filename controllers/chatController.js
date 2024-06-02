@@ -60,26 +60,22 @@ const accesschat = async (req, res) => {
 
         chats = await fetchallchatsWithPopulatedFields(req);
 
-        res
-          .status(201)
-          .json({
-            status,
-            message: "Chat has been created Successfully",
-            chat: fullCreatedChat[0],
-            chats,
-          });
+        res.status(201).json({
+          status,
+          message: "Chat has been created Successfully",
+          chat: fullCreatedChat[0],
+          chats,
+        });
       } catch (error) {
         return errorRespose(res, false, error);
       }
     } else {
-      res
-        .status(201)
-        .json({
-          status,
-          message: "Chat has been created Successfully",
-          chat: isChat[0],
-          chats,
-        });
+      res.status(201).json({
+        status,
+        message: "Chat has been created Successfully",
+        chat: isChat[0],
+        chats,
+      });
     }
   } catch (error) {
     return errorRespose(res, false, error);
@@ -299,14 +295,12 @@ const creategroup = async (req, res) => {
       (c) => String(c._id) === String(createdGroup._id)
     )[0];
 
-    return res
-      .status(201)
-      .json({
-        status: true,
-        message: "New Group created sucessfully",
-        Fullgroup: createdGroup,
-        chats,
-      });
+    return res.status(201).json({
+      status: true,
+      message: "New Group created sucessfully",
+      Fullgroup: createdGroup,
+      chats,
+    });
   } catch (error) {
     console.log(error);
     return errorRespose(res, status, error);
@@ -337,13 +331,11 @@ const updategroup = async (req, res) => {
 
     let chats = await fetchallchatsWithPopulatedFields(req);
 
-    res
-      .status(200)
-      .json({
-        status: true,
-        chats,
-        message: "Group Profile Updated Sucessfully 🎉",
-      });
+    res.status(200).json({
+      status: true,
+      chats,
+      message: "Group Profile Updated Sucessfully 🎉",
+    });
   } catch (error) {
     return errorRespose(res, false, error);
   }
@@ -369,14 +361,12 @@ const addGroupAdmin = async (req, res) => {
 
     let chats = await fetchallchatsWithPopulatedFields(req);
 
-    return res
-      .status(200)
-      .json({
-        status: true,
-        message: "Member updated as a GroupAdmin!",
-        chat: chat[0],
-        chats,
-      });
+    return res.status(200).json({
+      status: true,
+      message: "Member updated as a GroupAdmin!",
+      chat: chat[0],
+      chats,
+    });
   } catch (error) {
     return errorRespose(res, false, error);
   }
@@ -401,14 +391,12 @@ const removeGroupAdmin = async (req, res) => {
 
     let chats = await fetchallchatsWithPopulatedFields(req);
 
-    return res
-      .status(200)
-      .json({
-        status: true,
-        message: "Member removed from GroupAdmin!",
-        chat: chat[0],
-        chats,
-      });
+    return res.status(200).json({
+      status: true,
+      message: "Member removed from GroupAdmin!",
+      chat: chat[0],
+      chats,
+    });
   } catch (error) {
     return errorRespose(res, false, error);
   }
@@ -469,16 +457,12 @@ const addTogroup = async (req, res) => {
 
     let chats = await fetchallchatsWithPopulatedFields(req);
 
-    res
-      .status(200)
-      .json({
-        status: true,
-        message: `New ${
-          users.length > 1 ? "members" : "member"
-        } added to Group`,
-        chat: chat[0],
-        chats,
-      });
+    res.status(200).json({
+      status: true,
+      message: `New ${users.length > 1 ? "members" : "member"} added to Group`,
+      chat: chat[0],
+      chats,
+    });
 
     // The below code is needed because suppose if any of the user from the group is removed/left from the group but we still have to add the new message count for that user as well bcz in future if that user will be added in the group again than we have to show him the exact count of new messages that he has not seen!
     let unseenMsgCountObj = {};
@@ -558,15 +542,13 @@ const removeFromgroup = async (req, res) => {
 
     let chats = await fetchallchatsWithPopulatedFields(req);
 
-    return res
-      .status(200)
-      .json({
-        status: true,
-        message: "Member removed from group sucessfully",
-        chat: chat[0],
-        chats,
-        grpRemovedMsg,
-      });
+    return res.status(200).json({
+      status: true,
+      message: "Member removed from group sucessfully",
+      chat: chat[0],
+      chats,
+      grpRemovedMsg,
+    });
   } catch (error) {
     return errorRespose(res, status, error);
   }
